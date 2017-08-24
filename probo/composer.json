@@ -1,0 +1,14 @@
+{
+  "name": "drupal/probo",
+  "type": "drupal-module",
+  "description": "Integrates with a Probo.CI open source server.",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/probo",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/probo",
+    "source": "http://cgit.drupalcode.org/probo"
+  },
+  "require": { }
+}

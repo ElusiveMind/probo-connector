@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * Contains probo.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function probo_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the probo module.
+    case 'help.page.probo':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Integrates with a Probo.CI open source server.') . '</p>';
+      return $output;
+
+    default:
+  }
+}

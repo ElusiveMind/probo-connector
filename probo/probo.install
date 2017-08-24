@@ -1,0 +1,49 @@
+<?php
+
+
+/**
+ * Implements hook_schema().
+ */
+function probo_schema() {
+  $schema = [];
+  $schema['probo_builds'] = [
+    'description' => 'Contains the build id and time the build was created.',
+    'fields' => [
+      'bid' => [
+        'description' => 'The uuid of the build assigned by Probo',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'tid' => [
+        'description' => 'The individual task id for the current build',
+        'type' => 'varchar',
+        'length' => 16,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'event_name' => [
+        'description' => 'The name of the event as specified by Probo.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'plugin' => [
+        'description' => 'The plugin used for this event.',
+        'type' => 'varchar',
+        'length' => 16,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'payload' => [
+        'description' => 'The output of the event.',
+        'type' => 'text',
+        'size' => 'medium',
+        'not null' => TRUE,
+      ],
+    ],
+  ];
+  return $schema;
+}
