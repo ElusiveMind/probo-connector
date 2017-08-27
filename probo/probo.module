@@ -68,7 +68,6 @@ function probo_cron() {
     $body = substr($response, $info['header_size']);
     
     if (strpos($body, 'Build has been reaped')) {
-      drupal_set_message($build_id . ' - REAPED');
       $query = \Drupal::database()->delete('probo_builds')
         ->condition('bid', $build_id)
         ->execute();
