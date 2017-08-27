@@ -7,3 +7,27 @@ probo.probo_controller_log_listener:
   methods: [POST]
   requirements:
     _permission: 'access content'
+
+probo.probo_controller_display_active_builds:
+  path: 'probo/display-active-builds'
+  defaults:
+    _controller: '\Drupal\probo\Controller\ProboController::display_active_builds'
+    _title: 'Active Probo Builds'
+  requirements:
+    _permission: 'access content'
+
+probo.build_details:
+  path: 'probo/build/{build_details}'
+  defaults:
+    _controller: '\Drupal\probo\Controller\ProboController::build_details'
+    _title: 'Build Details'
+  requirements:
+    _permission: 'access content'
+
+probo.task_details:
+  path: 'probo/build/task/{build_details}/{task_details}'
+  defaults:
+    _controller: '\Drupal\probo\Controller\ProboController::task_details'
+    _title: 'Task Details'
+  requirements:
+    _permission: 'access content'

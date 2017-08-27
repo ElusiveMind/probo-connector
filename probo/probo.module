@@ -8,6 +8,26 @@
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
+ * Implements hook_theme().
+ */
+function probo_theme($existing, $type, $theme, $path) {
+  return [
+    'probo_build_index' => [
+      'variables' => ['builds' => []],
+      'template' => 'probo-build-index',
+    ],
+    'probo_build_details' => [
+      'variables' => ['build_id' => NULL, 'tasks' => []],
+      'template' => 'probo-build-details',
+    ],
+    'probo_task_details' => [
+      'variables' => ['build_id' => NULL, 'plugin' => NULL, 'event_name' => NULL, 'body' => NULL],
+      'template' => 'probo-task-details',
+    ],
+  ];
+}
+
+/**
  * Implements hook_help().
  */
 function probo_help($route_name, RouteMatchInterface $route_match) {
@@ -20,5 +40,38 @@ function probo_help($route_name, RouteMatchInterface $route_match) {
       return $output;
 
     default:
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function probo_cron() {
+  // Check for reaped builds. If we have them, then remove them from the database.
+  $query = \Drupal::database()->select('probo_builds', 'pb')
+    ->fields('pb', ['bid'])
+    ->distinct();
+  $build_objects = $query->execute()->fetchAllAssoc('bid');
+    
+  // Assemble the build id's into an array to be iterated through in the template.
+  foreach ($build_objects as $build_object) {
+    $build_id = $build_object->bid;
+
+    $url = 'http://' . $build_id . '.probo.itcon-dev.com';
+    // Get the information from the loom.
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HEADER, 1);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    $header = substr($response, 0, $info['header_size']);
+    $body = substr($response, $info['header_size']);
+    
+    if (strpos($body, 'Build has been reaped')) {
+      drupal_set_message($build_id . ' - REAPED');
+      $query = \Drupal::database()->delete('probo_builds')
+        ->condition('bid', $build_id)
+        ->execute();
+    }
   }
 }

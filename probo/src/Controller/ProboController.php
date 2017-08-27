@@ -65,4 +65,85 @@ class ProboController extends ControllerBase {
     ];
     return new JsonResponse($response);
   }
+  
+  /**
+   * display_active_builds().
+   *
+   * Display a list of all the current active builds by id.
+   */
+  public function display_active_builds() {
+    // Get the builds from our database.
+    $query = \Drupal::database()->select('probo_builds', 'pb')
+      ->distinct()
+      ->fields('pb', ['bid']);
+    $build_objects = $query->execute()->fetchAllAssoc('bid');
+
+    // Assemble the build id's into an array to be iterated through in the template.
+    $build_id = [];
+    foreach ($build_objects as $build_object) {
+      $build_id[] = $build_object->bid;
+    }
+
+    // Output.
+    return [
+      '#theme' => 'probo_build_index', 
+      '#builds' => $build_id,
+    ];
+  }
+
+  /**
+   * build_details($build_id).
+   *
+   * Get the details of the build including a list of all the tasks
+   * associated with that build.
+   */
+  public function build_details($build_details) {
+    // Get the builds from our database.
+    $query = \Drupal::database()->select('probo_builds', 'pb')
+      ->fields('pb', ['id', 'bid', 'tid', 'event_name', 'plugin'])
+      ->condition('bid', $build_details)
+      ->orderBy('tid', 'ASC');
+    $objects = $query->execute()->fetchAllAssoc('id');
+
+    $tasks = [];
+    foreach ($objects as $object) {
+      $build_id = $object->bid;
+      $tasks[] = [
+        'tid' => $object->tid,
+        'event_name' => $object->event_name,
+        'plugin' =>$object->plugin,
+      ];
+    }
+
+    // Output.
+    return [
+      '#theme' => 'probo_build_details', 
+      '#build_id' => $build_id,
+      '#tasks' => $tasks,
+    ];  
+  }
+
+  /**
+   * task_details($task_id).
+   *
+   * The output of the task in a command line format. This is the general
+   * debugging format that is used for checking for build errors.
+   */
+  public function task_details($build_details, $task_details) {
+    // Get the builds from our database.
+    $query = \Drupal::database()->select('probo_builds', 'pb')
+      ->fields('pb', ['id', 'bid', 'payload', 'event_name', 'plugin'])
+      ->condition('bid', $build_details)
+      ->condition('tid', $task_details);
+    $object = $query->execute()->fetchAssoc();
+
+    return [
+      '#theme' => 'probo_task_details',
+      '#build_id' => $build_details,
+      '#task_id' => $task_details,
+      '#body' => $object['payload'],
+      '#event_name' => $object['event_name'],
+      '#plugin' => $object['plugin'],
+    ];
+  }
 }

@@ -1,14 +1,18 @@
 <?php
 
 /**
- * @file probo-log-handler.php - v0.1
+ * @file probo-log-handler.php - v0.2
  * by Michael R. Bagnall <mrbagnall@icloud.com>
  *
  * Parses a directory of Probo Loom log files and sends to a service for the useful
  * purpose of debugging probo builds.
  */
 
-if ($handle = opendir('.')) {
+// We need to provide the path to our data directory here so we can run this on
+// our cron task.
+$base_path = '/home/serviceadmin/probo-loom/data/';
+
+if ($handle = opendir($base_path)) {
   while (FALSE !== ($entry = readdir($handle))) {
     if ($entry != "." && $entry != ".." && $entry != 'probo-log-handler.php') {
       if (substr($entry, 0, 6) == 'stream') {
@@ -54,9 +58,6 @@ if ($handle = opendir('.')) {
             }
           }
         }
-        
-        // Decode the data coming from the loom.
-        //$json = json_decode($body);
 
         // If we get an error then the stream does not exist and we can remove the file.
         // This is convenient as it automates our housekeeping :) We also need to send
@@ -66,7 +67,7 @@ if ($handle = opendir('.')) {
           echo $json->error . "\n";
 
           // Delete the file.
-          unlink($entry);
+          unlink($base_path . $entry);
 
           // Trigger removal from the remote server.
           $data = new stdClass();
@@ -86,7 +87,7 @@ if ($handle = opendir('.')) {
         deliver_payload($payload);
 
         // Uncomment only when we've gone to production.
-        //unlink($entry);
+        unlink($base_path . $entry);
       }
     }
   }
@@ -101,7 +102,7 @@ if ($handle = opendir('.')) {
  */
 function deliver_payload($payload) {
   // Send the payload to the service.
-  $ch = curl_init('https://michaelbagnall.com/l/probo-log-listener.php');
+  $ch = curl_init('http://proofroom.net:3090/probo-api/log-listener.json');
   curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
   curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

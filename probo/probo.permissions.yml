@@ -1,0 +1,5 @@
+
+access probo information:
+  title: 'Access Probo Build Information'
+  description: 'Allows the user to access Probo build and task information including debugging data.'
+  restruct access: TRUE

@@ -1,0 +1,4 @@
+<h1>{{ build_id }}</h1>
+{% for task in tasks %}
+  <a href="/probo/build/task/{{ build_id }}/{{ task.tid }}">{{ task.plugin }} - {{ task.event_name }}</a><hr />
+{% endfor %}
