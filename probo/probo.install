@@ -9,10 +9,16 @@ function probo_schema() {
   $schema['probo_builds'] = [
     'description' => 'Contains the build id and time the build was created.',
     'fields' => [
+      'id' => [
+        'description' => 'Serial id for this entry',
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unassigned' => TRUE,
+      ],
       'bid' => [
         'description' => 'The uuid of the build assigned by Probo',
         'type' => 'varchar',
-        'length' => 32,
+        'length' => 36,
         'not null' => TRUE,
         'default' => '',
       ],
@@ -44,6 +50,7 @@ function probo_schema() {
         'not null' => TRUE,
       ],
     ],
+    'primary key' => ['id'],
   ];
   return $schema;
 }

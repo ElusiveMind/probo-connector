@@ -1,0 +1,9 @@
+
+probo.probo_controller_log_listener:
+  path: 'probo-api/log-listener.json'
+  defaults:
+    _controller: '\Drupal\probo\Controller\ProboController::log_listener'
+    _title: 'Probo Log Listener'
+  methods: [POST]
+  requirements:
+    _permission: 'access content'
