@@ -84,11 +84,18 @@ class ProboController extends ControllerBase {
       $build_id[] = $build_object->bid;
     }
 
-    // Output.
-    return [
-      '#theme' => 'probo_build_index', 
-      '#builds' => $build_id,
-    ];
+    if (empty(count($build_id))) {
+      return [
+        '#markup' => 'There are no active Probo builds to display.',
+      ];
+    }
+    else {
+      // Output.
+      return [
+        '#theme' => 'probo_build_index', 
+        '#builds' => $build_id,
+      ];
+    }
   }
 
   /**

@@ -64,10 +64,8 @@ function probo_cron() {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     $response = curl_exec($ch);
     curl_close($ch);
-    $header = substr($response, 0, $info['header_size']);
-    $body = substr($response, $info['header_size']);
-    
-    if (strpos($body, 'Build has been reaped')) {
+
+    if (strpos($response, 'Build has been reaped')) {
       $query = \Drupal::database()->delete('probo_builds')
         ->condition('bid', $build_id)
         ->execute();
