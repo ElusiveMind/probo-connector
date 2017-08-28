@@ -32,6 +32,7 @@ class ProboController extends ControllerBase {
       $plugin = $data->task->plugin;
       $body = $data->body;
       $action = $data->action;
+      $timestamp = $data->file_time;
     
       // Delete the record from our database if we are specifically told
       // to do so only.
@@ -47,8 +48,8 @@ class ProboController extends ControllerBase {
       elseif ($data->action == 'info') {
         \Drupal::database()->merge('probo_builds')
           ->key(['bid' => $buildId, 'tid' => $taskId])
-          ->insertFields(['bid' => $buildId, 'tid' => $taskId, 'event_name' => $name, 'plugin' => $plugin, 'payload' => $body])
-          ->updateFields(['name' => $name, 'plugin' => $plugin, 'payload' => $body])
+          ->insertFields(['bid' => $buildId, 'tid' => $taskId, 'event_name' => $name, 'plugin' => $plugin, 'payload' => $body, 'timestamp' => $timestamp])
+          ->updateFields(['name' => $name, 'plugin' => $plugin, 'payload' => $body, 'timestamp' => $timestamp])
           ->execute();
       }
     
@@ -107,18 +108,30 @@ class ProboController extends ControllerBase {
   public function build_details($build_details) {
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
-      ->fields('pb', ['id', 'bid', 'tid', 'event_name', 'plugin'])
+      ->fields('pb', ['id', 'bid', 'tid', 'event_name', 'plugin', 'timestamp'])
       ->condition('bid', $build_details)
       ->orderBy('tid', 'ASC');
     $objects = $query->execute()->fetchAllAssoc('id');
 
+    $previous_start_time = 0;
     $tasks = [];
     foreach ($objects as $object) {
+      if ($previous_start_time == 0) {
+        $previous_start_time = $object->timestamp;
+        $duration = NULL;
+      }
+      else {
+        $duration = number_format($object->timestamp - $previous_start_time, 3) . ' seconds';
+        $previous_start_time = $object->timestamp;
+      }
+      
       $build_id = $object->bid;
       $tasks[] = [
         'tid' => $object->tid,
         'event_name' => $object->event_name,
-        'plugin' =>$object->plugin,
+        'plugin' => $object->plugin,
+        'date' => date('m/d/Y H:i:s', (int)$object->timestamp),
+        'duration' => $duration,
       ];
     }
 
@@ -139,7 +152,7 @@ class ProboController extends ControllerBase {
   public function task_details($build_details, $task_details) {
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
-      ->fields('pb', ['id', 'bid', 'payload', 'event_name', 'plugin'])
+      ->fields('pb', ['id', 'bid', 'payload', 'event_name', 'plugin', 'timestamp'])
       ->condition('bid', $build_details)
       ->condition('tid', $task_details);
     $object = $query->execute()->fetchAssoc();
@@ -151,6 +164,7 @@ class ProboController extends ControllerBase {
       '#body' => $object['payload'],
       '#event_name' => $object['event_name'],
       '#plugin' => $object['plugin'],
+      '#timestamp' => $object['timestamp'],
     ];
   }
 }

@@ -43,6 +43,13 @@ function probo_schema() {
         'not null' => TRUE,
         'default' => '',
       ],
+      'timestamp' => [
+        'description' => 'The microtime this file was created.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '0',
+      ],
       'payload' => [
         'description' => 'The output of the event.',
         'type' => 'text',

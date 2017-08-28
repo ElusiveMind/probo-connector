@@ -3,3 +3,4 @@ type: module
 description: Integrates with a Probo.CI open source server.
 core: 8.x
 package: ITCON
+version: 8.x-1.0
