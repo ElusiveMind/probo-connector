@@ -63,6 +63,24 @@ foreach ($entries as $entry) {
         }
       }
 
+      // For some reasons, our builds are going dormant when first created or after a period
+      // of time. In this we kickstart their hearts to make sure we don't get initial errors.
+      // Cap the number of times this will run at 10 to prevent invinite loop errors in the
+      // event there are site errors.
+      // Keep the build alive. Keep the build aliiiiiive.
+      $url = 'http://' . $build_id . '.probo.itcon-dev.com';
+      $do_again = FALSE;
+      $loop = 0;
+      do {
+        $loop++;
+        exec('/usr/bin/wget -Sc' . $url, $output);
+        foreach ($ouput as $line) {
+          if (strpos($line, 'HTTP/1.1 500')) {
+            $do_again = TRUE;
+          }
+        }
+      } while ($do_again == TRUE && $loop < 10);
+
       // If we get an error then the stream does not exist and we can remove the file.
       // This is convenient as it automates our housekeeping :) We also need to send
       // word to our listener that they can delete their representative data from the
