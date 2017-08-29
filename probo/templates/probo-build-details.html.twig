@@ -1,4 +1,33 @@
-<h1>{{ build_id }}</h1>
+<style>
+  h2.headline {
+    font-size: 18pt;
+    padding: 0px;
+    margin: 0px 0px 15px 0px;
+    font-family: "Helvetica Neue", Helvetica, Sans-Serif;
+    color: #800000;
+    font-weight: bold;
+  }
+  
+  h1, .breadcrumb {
+    display: none;
+  }
+
+  p.line_item {
+    font-size: 12pt;
+    color: #800000;
+    font-family: "Helvetica Neue", Helvetica, Sans-Serif;
+    padding: 0px;
+    margin: 0px;
+  }
+  p.line_item a {
+    color: #800000;
+  }
+</style>
+
+<h2 class="headline">{{ build.pr_name }} - {{ build.repo }}/{{ build.owner}}</h2>
 {% for task in tasks %}
-  <a href="/probo/build/task/{{ build_id }}/{{ task.tid }}">{{ task.plugin }} - {{ task.event_name }}</a> - {{ task.duration }} - Date: {{ task.date }}<hr />
+  <p class="line_item">
+    <a href="/probo/build/task/{{ build.bid }}/{{ task.tid }}">{{ task.plugin }} - {{ task.event_name }}</a> - {{ task.duration }} - Date: {{ task.date }}
+  </p>
+  <hr />
 {% endfor %}

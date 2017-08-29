@@ -1,3 +1,20 @@
+<style>
+  .build {
+    font-family: "Helvetica Neue", "Helvetica", Arial, Sana-serif;
+    font-size: 11pt;
+    color: #800000;
+  }
+  h2.headline {
+    font-size: 18pt;
+    padding: 0px;
+    margin: 0px;
+  }
+</style>
+
 {% for build in builds %}
-<h2><a href="/probo/build/{{ build }}">{{ build }}</a> - <a href="http://{{ build }}.probo.itcon-dev.com" target="_new">Click Me</a></h2>
+<div class="build">
+  <h2 class="headline"><a href="/probo/build/{{ build.bid }}">{{ build.pr_name }} - {{ build.author_name }}</a></h2>
+  Repository: {{ build.owner }}/{{ build.repo }}  // URL: <a href="http://{{ build.bid }}.probo.itcon-dev.com" target="_new">http://{{ build.bid }}.probo.itcon-dev.com</a>
+</div>
+<hr />
 {% endfor %}

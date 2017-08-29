@@ -87,7 +87,7 @@ function probo_schema() {
       'plugin' => [
         'description' => 'The plugin used for this event.',
         'type' => 'varchar',
-        'length' => 16,
+        'length' => 96,
         'not null' => TRUE,
         'default' => '',
       ],

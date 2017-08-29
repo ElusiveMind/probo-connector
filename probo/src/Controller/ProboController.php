@@ -37,19 +37,23 @@ class ProboController extends ControllerBase {
       // Delete the record from our database if we are specifically told
       // to do so only.
       if ($data->action == 'delete') {
-        \Drupal::database()->delete('probo_builds')
+        \Drupal::database()->delete('probo_tasks')
           ->condition('bid', $buildId)
           ->condition('tid', $taskId)
+          ->execute();
+        
+        \Drupal::database()->detete('probo_builds')
+          ->condition('bid', $buildId)
           ->execute();
       }
       // Just because we're not deleting doesn't mean we're adding. We may
       // be updating. If we have a record and a file, then do an update.
       // Otherwise, add new.
       elseif ($data->action == 'info') {
-        \Drupal::database()->merge('probo_builds')
+        \Drupal::database()->merge('probo_tasks')
           ->key(['bid' => $buildId, 'tid' => $taskId])
           ->insertFields(['bid' => $buildId, 'tid' => $taskId, 'event_name' => $name, 'plugin' => $plugin, 'payload' => $body, 'timestamp' => $timestamp])
-          ->updateFields(['name' => $name, 'plugin' => $plugin, 'payload' => $body, 'timestamp' => $timestamp])
+          ->updateFields(['event_name' => $name, 'plugin' => $plugin, 'payload' => $body, 'timestamp' => $timestamp])
           ->execute();
       }
     
@@ -75,17 +79,11 @@ class ProboController extends ControllerBase {
   public function display_active_builds() {
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
-      ->distinct()
-      ->fields('pb', ['bid']);
-    $build_objects = $query->execute()->fetchAllAssoc('bid');
+      ->fields('pb', ['id', 'bid', 'repo', 'owner', 'pr_name', 'author_name']);
+    $builds = $query->execute()->fetchAllAssoc('id');
 
     // Assemble the build id's into an array to be iterated through in the template.
-    $build_id = [];
-    foreach ($build_objects as $build_object) {
-      $build_id[] = $build_object->bid;
-    }
-
-    if (empty(count($build_id))) {
+    if (empty(count($builds))) {
       return [
         '#markup' => 'There are no active Probo builds to display.',
       ];
@@ -94,7 +92,8 @@ class ProboController extends ControllerBase {
       // Output.
       return [
         '#theme' => 'probo_build_index', 
-        '#builds' => $build_id,
+        '#builds' => $builds,
+        ''
       ];
     }
   }
@@ -108,6 +107,21 @@ class ProboController extends ControllerBase {
   public function build_details($build_details) {
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
+      ->fields('pb', ['id', 'bid', 'repo', 'owner', 'pr_name', 'author_name'])
+      ->condition('bid', $build_details);
+    $build = $query->execute()->fetchAllAssoc('id');
+    $build = array_pop($build);
+
+    $build_info = [
+      'bid' => $build->bid,
+      'repo' => $build->repo,
+      'owner' => $build->owner,
+      'pr_name' => $build->pr_name,
+      'author_name' => $build->author_name,
+    ];
+
+    // Get the builds from our database.
+    $query = \Drupal::database()->select('probo_tasks', 'pb')
       ->fields('pb', ['id', 'bid', 'tid', 'event_name', 'plugin', 'timestamp'])
       ->condition('bid', $build_details)
       ->orderBy('tid', 'ASC');
@@ -125,7 +139,6 @@ class ProboController extends ControllerBase {
         $previous_start_time = $object->timestamp;
       }
       
-      $build_id = $object->bid;
       $tasks[] = [
         'tid' => $object->tid,
         'event_name' => $object->event_name,
@@ -138,7 +151,7 @@ class ProboController extends ControllerBase {
     // Output.
     return [
       '#theme' => 'probo_build_details', 
-      '#build_id' => $build_id,
+      '#build' => $build_info,
       '#tasks' => $tasks,
     ];  
   }
@@ -151,11 +164,20 @@ class ProboController extends ControllerBase {
    */
   public function task_details($build_details, $task_details) {
     // Get the builds from our database.
-    $query = \Drupal::database()->select('probo_builds', 'pb')
+    $query = \Drupal::database()->select('probo_tasks', 'pb')
       ->fields('pb', ['id', 'bid', 'payload', 'event_name', 'plugin', 'timestamp'])
       ->condition('bid', $build_details)
       ->condition('tid', $task_details);
     $object = $query->execute()->fetchAssoc();
+
+    // Get the builds from our database.
+    $query = \Drupal::database()->select('probo_builds', 'pb')
+      ->fields('pb', ['id', 'bid', 'repo', 'owner', 'pr_name', 'author_name'])
+      ->condition('bid', $build_details);
+    $build = $query->execute()->fetchAllAssoc('id');
+    $build = array_pop($build);
+
+
 
     return [
       '#theme' => 'probo_task_details',
@@ -165,20 +187,24 @@ class ProboController extends ControllerBase {
       '#event_name' => $object['event_name'],
       '#plugin' => $object['plugin'],
       '#timestamp' => $object['timestamp'],
+      '#pr_name' => $build->pr_name,
+      '#owner' => $build->owner,
+      '#repo' => $build->repo,
     ];
   }
-}
 
-/**
- * process_probo_build().
- * This is what gives the probo build its metadata that we can't get otherwise.
- */
-public function process_probo_build($build_id, $owner, $repo, $pr_name, $author_name) {
-  \Drupal::database()->merge('probo_builds')
-  ->key(['bid' => $build_id])
-  ->insertFields(['bid' => $build_id, 'owner' => $owner, 'repo' => $repo, 'pr_name' => $pr_name, 'author_name' => $author_name])
-  ->updateFields(['owner' => $owner, 'repo' => $repo, 'pr_name' => $pr_name, 'author_name' => $author_name])
-  ->execute();
+  /**
+  * process_probo_build().
+  * This is what gives the probo build its metadata that we can't get otherwise.
+  */
+  public function process_probo_build($build_id, $owner, $repo, $pr_name, $author_name) {
+    \Drupal::database()->merge('probo_builds')
+      ->key(['bid' => $build_id])
+      ->insertFields(['bid' => $build_id, 'owner' => $owner, 'repo' => $repo, 'pr_name' => $pr_name, 'author_name' => $author_name])
+      ->updateFields(['owner' => $owner, 'repo' => $repo, 'pr_name' => $pr_name, 'author_name' => $author_name])
+      ->execute();
 
-  \Drupal\RedirectResponse::create('/probo/build/' . $build_id);
+    header('location: http://dev.itcon-dev.com');
+    exit();
+  }
 }
