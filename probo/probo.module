@@ -76,10 +76,11 @@ function probo_cron() {
     // event there are site errors.
     // Keep the build alive. Keep the build aliiiiiive.
     $do_again = FALSE;
+    $output = [];
     $loop = 0;
     do {
       $loop++;
-      exec('/usr/bin/wget -Sc' . $url, $output);
+      exec('/usr/bin/wget -Sc ' . $url, $output);
       foreach ($ouput as $line) {
         if (strpos($line, 'HTTP/1.1 500')) {
           $do_again = TRUE;

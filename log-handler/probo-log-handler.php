@@ -32,7 +32,6 @@ foreach ($entries as $entry) {
       // Get the build id (just the uuid).
       $build_id = explode('-', $stream_id);
       array_shift($build_id);
-      array_shift($build_id);
         
       // Get the task id.
       $task_id = array_pop($build_id);
@@ -68,12 +67,13 @@ foreach ($entries as $entry) {
       // Cap the number of times this will run at 10 to prevent invinite loop errors in the
       // event there are site errors.
       // Keep the build alive. Keep the build aliiiiiive.
-      $url = 'http://' . $build_id . '.probo.itcon-dev.com';
+      $url = "http://" . $build_id . '.probo.itcon-dev.com';
       $do_again = FALSE;
+      $output = [];
       $loop = 0;
       do {
         $loop++;
-        exec('/usr/bin/wget -Sc' . $url, $output);
+        exec('/usr/bin/wget -Sc ' . $url, $output);
         foreach ($ouput as $line) {
           if (strpos($line, 'HTTP/1.1 500')) {
             $do_again = TRUE;
@@ -110,7 +110,7 @@ foreach ($entries as $entry) {
       deliver_payload($payload, $probo_dashboard_url);
 
       // Uncomment only when we've gone to production.
-      //unlink($base_path . $entry);
+      unlink($base_path . $entry);
     }
   }
 }
