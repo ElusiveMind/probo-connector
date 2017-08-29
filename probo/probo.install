@@ -7,6 +7,51 @@
 function probo_schema() {
   $schema = [];
   $schema['probo_builds'] = [
+    'id' => [
+      'description' => 'Serial id for this entry',
+      'type' => 'serial',
+      'not null' => TRUE,
+      'unassigned' => TRUE,
+    ],
+    'bid' => [
+      'description' => 'The uuid of the build assigned by Probo',
+      'type' => 'varchar',
+      'length' => 36,
+      'not null' => TRUE,
+      'default' => '',
+    ],
+    'repo' => [
+      'description' => 'The repository name.',
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+      'default' => '0',
+    ],
+    'owner' => [
+      'description' => 'The owning organization of the repo.',
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+      'default' => '0',
+    ],
+    'pr_name' => [
+      'description' => 'The name of the pull request.',
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+      'default' => '0',
+    ],
+    'author_name' => [
+      'description' => 'The author of the pull request.',
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+      'default' => '0',
+    ],
+    'primary key' => ['id'],
+  ];
+
+  $schema['probo_tasks'] = [
     'description' => 'Contains the build id and time the build was created.',
     'fields' => [
       'id' => [

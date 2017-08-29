@@ -8,6 +8,14 @@ probo.probo_controller_log_listener:
   requirements:
     _permission: 'access content'
 
+probo.probo_controller_probo_build:
+  path: 'probo-build/{build_id}/{owner}/{repo}/{pr_name}/{author_name}'
+  defaults:
+    _controller: '\Drupal\probo\Controller\ProboController::process_probo_build'
+    _title: 'Process Probo Build'
+  requirements:
+    _permission: 'access content'
+    
 probo.probo_controller_display_active_builds:
   path: 'probo/display-active-builds'
   defaults:

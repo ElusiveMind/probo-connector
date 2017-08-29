@@ -168,3 +168,17 @@ class ProboController extends ControllerBase {
     ];
   }
 }
+
+/**
+ * process_probo_build().
+ * This is what gives the probo build its metadata that we can't get otherwise.
+ */
+public function process_probo_build($build_id, $owner, $repo, $pr_name, $author_name) {
+  \Drupal::database()->merge('probo_builds')
+  ->key(['bid' => $build_id])
+  ->insertFields(['bid' => $build_id, 'owner' => $owner, 'repo' => $repo, 'pr_name' => $pr_name, 'author_name' => $author_name])
+  ->updateFields(['owner' => $owner, 'repo' => $repo, 'pr_name' => $pr_name, 'author_name' => $author_name])
+  ->execute();
+
+  \Drupal\RedirectResponse::create('/probo/build/' . $build_id);
+}
