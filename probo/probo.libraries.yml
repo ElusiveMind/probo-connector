@@ -1,0 +1,5 @@
+main-styles:
+  version: 1.0
+  css:
+    module:
+      css/style.css: {}

@@ -39,3 +39,19 @@ probo.task_details:
     _title: 'Task Details'
   requirements:
     _permission: 'access content'
+
+probo.probo_administration_controller_probo_settings:
+  path: 'admin/config/system/probo'
+  defaults:
+    _controller: '\Drupal\probo\Controller\ProboAdministrationController::probo_settings'
+    _title: 'Probo'
+  requirements:
+    _permission: 'administer probo'
+
+probo.probo_asset_manager_asset_manager:
+  path: '/probo/asset_manager'
+  defaults:
+    _controller: '\Drupal\probo\Controller\ProboAssetManager::asset_manager'
+    _title: 'Asset Manager'
+  requirements:
+    _permission: 'access probo asset manager'

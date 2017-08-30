@@ -1,20 +1,10 @@
-<style>
-  .build {
-    font-family: "Helvetica Neue", "Helvetica", Arial, Sana-serif;
-    font-size: 11pt;
-    color: #800000;
-  }
-  h2.headline {
-    font-size: 18pt;
-    padding: 0px;
-    margin: 0px;
-  }
-</style>
-
+{{ attach_library('probo/main-styles') }}
+<h1 class="probo-header">Active Probo Builds</h1>
 {% for build in builds %}
 <div class="build">
   <h2 class="headline"><a href="/probo/build/{{ build.bid }}">{{ build.pr_name }} - {{ build.author_name }}</a></h2>
-  Repository: {{ build.owner }}/{{ build.repo }}  // URL: <a href="http://{{ build.bid }}.probo.itcon-dev.com" target="_new">http://{{ build.bid }}.probo.itcon-dev.com</a>
+  <p class="repository">Repository: <a href="#">{{ build.owner }}/{{ build.repo }}</a></p>
+  <p class="build-url">Build URL: <a href="http://{{ build.bid }}.probo.itcon-dev.com" target="_new">http://{{ build.bid }}.probo.itcon-dev.com</a></p>
 </div>
 <hr />
 {% endfor %}

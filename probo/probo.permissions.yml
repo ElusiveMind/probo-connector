@@ -1,5 +1,14 @@
-
 access probo information:
   title: 'Access Probo Build Information'
   description: 'Allows the user to access Probo build and task information including debugging data.'
-  restruct access: TRUE
+  restrict access: TRUE
+
+access probo asset manager:
+  title: 'Access Probo Asset Manager'
+  description: 'Allows the user to access the Probo asset manager to upload assets for repositories.'
+  restrict access: TRUE
+
+administer probo:
+  title: 'Admister Probo Settings'
+  description: 'Administer organization and repository settings.'
+  restrict access: TRUE

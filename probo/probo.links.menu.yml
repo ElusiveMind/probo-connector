@@ -1,0 +1,11 @@
+probo.probo_administration_controller_probo_settings:
+  title: 'Probo'
+  parent: system.admin_config_system
+  description: 'General settings for the Probo system.'
+  route_name: probo.probo_administration_controller_probo_settings
+
+probo.probo_asset_manager:
+  title: 'Asset Manager'
+  menu_name: main
+  description: 'Asset Manager'
+  route_name: probo.probo_asset_manager_asset_manager
