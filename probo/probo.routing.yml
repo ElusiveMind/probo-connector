@@ -9,7 +9,7 @@ probo.probo_controller_log_listener:
     _permission: 'access content'
 
 probo.probo_controller_probo_build:
-  path: 'probo-build/{build_id}/{owner}/{repo}/{pr_name}/{author_name}'
+  path: 'probo-build/{build_id}/{owner}/{repo}/{pull_request_name}/{author_name}{pull_request_url}'
   defaults:
     _controller: '\Drupal\probo\Controller\ProboController::process_probo_build'
     _title: 'Process Probo Build'

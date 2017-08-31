@@ -1,5 +1,5 @@
 {{ attach_library('probo/main-styles') }}
-<h1 class="probo-header">{{ build.pr_name }}</h1><hr />
+<h1 class="probo-header">{{ build.pull_request_name }}</h1><hr />
 {% for task in tasks %}
 <p class="line-item">
   <a href="/probo/build/task/{{ build.bid }}/{{ task.tid }}">{{ task.plugin }} - {{ task.event_name }}</a> - {{ task.duration }} - Date: {{ task.date }}

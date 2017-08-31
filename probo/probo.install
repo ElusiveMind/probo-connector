@@ -1,5 +1,6 @@
 <?php
 
+use Drupal\Core\Database\Database;
 
 /**
  * Implements hook_schema().
@@ -36,7 +37,7 @@ function probo_schema() {
         'not null' => TRUE,
         'default' => '0',
       ],
-      'pr_name' => [
+      'pull_request_name' => [
         'description' => 'The name of the pull request.',
         'type' => 'varchar',
         'length' => 255,
@@ -45,6 +46,13 @@ function probo_schema() {
       ],
       'author_name' => [
         'description' => 'The author of the pull request.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '0',
+      ],
+      'pull_request_url' => [
+        'description' => 'The url of the pull request.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
@@ -108,4 +116,31 @@ function probo_schema() {
     'primary key' => ['id'],
   ];
   return $schema;
+}
+
+/**
+ * Rename pr_name to pull_request_name and add pull_request_url
+ */
+function probo_update_8101 {
+  // Initialize our schema object.
+  $schema = Database::getConnection->schema();
+
+  // Add pull_request_url
+  $spec = [
+    'description' => 'The pull request url for this build.',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '',
+  ];  
+  $schema->addField('probo_builds', 'pull_request_url', $spec);
+
+  $spec = [
+    'description' => 'The name of the pull request.',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '0',
+  ];
+  $schema->changeField('probo_builds', 'pr_name', 'pull_request_name', $spec);
 }

@@ -42,7 +42,8 @@ p.line-item a {
 
 p.repository,
 p.build-url,
-p.line-item {
+p.line-item,
+p.pull-request-url {
   padding: 0px;
   margin: 0px;
   color: #000000;
@@ -56,6 +57,9 @@ p.build-url a:hover,
 p.build-url a:visited,
 p.line-item a,
 p.line-item a:hover,
-p.line-item a:visited {
+p.line-item a:visited,
+p.pull-request-url a,
+p.pull-request-url a:hover,
+p.pull-request-url a:visited {
   color: #800000;
 }

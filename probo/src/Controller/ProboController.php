@@ -6,6 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Class ProboController.
@@ -52,7 +53,8 @@ class ProboController extends ControllerBase {
       elseif ($data->action == 'info') {
         \Drupal::database()->merge('probo_tasks')
           ->key(['bid' => $buildId, 'tid' => $taskId])
-          ->insertFields(['bid' => $buildId, 'tid' => $taskId, 'event_name' => $name, 'plugin' => $plugin, 'payload' => $body, 'timestamp' => $timestamp])
+          ->insertFields(['bid' => $buildId, 'tid' => $taskId, 'event_name' => $name, 'plugin' => $plugin, 
+            'payload' => $body, 'timestamp' => $timestamp])
           ->updateFields(['event_name' => $name, 'plugin' => $plugin, 'payload' => $body, 'timestamp' => $timestamp])
           ->execute();
       }
@@ -79,7 +81,7 @@ class ProboController extends ControllerBase {
   public function display_active_builds() {
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
-      ->fields('pb', ['id', 'bid', 'repo', 'owner', 'pr_name', 'author_name']);
+      ->fields('pb', ['id', 'bid', 'repo', 'owner', 'pull_request_name', 'author_name', 'pull_request_url']);
     $builds = $query->execute()->fetchAllAssoc('id');
 
     // Assemble the build id's into an array to be iterated through in the template.
@@ -107,7 +109,7 @@ class ProboController extends ControllerBase {
   public function build_details($build_details) {
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
-      ->fields('pb', ['id', 'bid', 'repo', 'owner', 'pr_name', 'author_name'])
+      ->fields('pb', ['id', 'bid', 'repo', 'owner', 'pull_request_name', 'author_name', 'pull_request_url'])
       ->condition('bid', $build_details);
     $build = $query->execute()->fetchAllAssoc('id');
     $build = array_pop($build);
@@ -116,8 +118,9 @@ class ProboController extends ControllerBase {
       'bid' => $build->bid,
       'repo' => $build->repo,
       'owner' => $build->owner,
-      'pr_name' => $build->pr_name,
+      'pull_request_name' => $build->pull_request_name,
       'author_name' => $build->author_name,
+      'pull_request_url' => $build->pull_request_url,
     ];
 
     // Get the builds from our database.
@@ -172,12 +175,10 @@ class ProboController extends ControllerBase {
 
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
-      ->fields('pb', ['id', 'bid', 'repo', 'owner', 'pr_name', 'author_name'])
+      ->fields('pb', ['id', 'bid', 'repo', 'owner', 'pull_request_name', 'author_name', 'pull_request_url'])
       ->condition('bid', $build_details);
     $build = $query->execute()->fetchAllAssoc('id');
     $build = array_pop($build);
-
-
 
     return [
       '#theme' => 'probo_task_details',
@@ -187,7 +188,8 @@ class ProboController extends ControllerBase {
       '#event_name' => $object['event_name'],
       '#plugin' => $object['plugin'],
       '#timestamp' => $object['timestamp'],
-      '#pr_name' => $build->pr_name,
+      '#pull_request_name' => $build->pull_request_name,
+      '#pull_request_url' => $build->pull_request_url,
       '#owner' => $build->owner,
       '#repo' => $build->repo,
     ];
@@ -197,14 +199,15 @@ class ProboController extends ControllerBase {
   * process_probo_build().
   * This is what gives the probo build its metadata that we can't get otherwise.
   */
-  public function process_probo_build($build_id, $owner, $repo, $pr_name, $author_name) {
+  public function process_probo_build($build_id, $owner, $repo, $pull_request_name, $author_name, $pull_request_url) {
     \Drupal::database()->merge('probo_builds')
       ->key(['bid' => $build_id])
-      ->insertFields(['bid' => $build_id, 'owner' => $owner, 'repo' => $repo, 'pr_name' => $pr_name, 'author_name' => $author_name])
-      ->updateFields(['owner' => $owner, 'repo' => $repo, 'pr_name' => $pr_name, 'author_name' => $author_name])
+      ->insertFields(['bid' => $build_id, 'owner' => $owner, 'repo' => $repo, 'pull_request_name' => $pull_request_name,
+        'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
+      ->updateFields(['owner' => $owner, 'repo' => $repo, 'pull_request_name' => $pull_request_name, 'author_name' => $author_name,
+        'pull_request_url' => $pull_request_url])
       ->execute();
 
-    header('location: http://dev.itcon-dev.com');
-    exit();
+      return new RedirectResponse(\Drupal::url('probo.probo_controller_display_active_builds'));1
   }
 }
