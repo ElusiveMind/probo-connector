@@ -1,11 +1,17 @@
 {{ attach_library('probo/main-styles') }}
 <h1 class="probo-header">Active Probo Builds</h1>
 {% for build in builds %}
-<div class="build">
-  <h2 class="headline"><a href="/probo/build/{{ build.bid }}">{{ build.pull_request_name }} - {{ build.author_name }}</a></h2>
-  <p class="repository">Repository: <a href="#">{{ build.owner }}/{{ build.repo }}</a></p>
-  <p class="build-url">Build URL: <a href="http://{{ build.bid }}.probo.itcon-dev.com" target="_new">http://{{ build.bid }}.probo.itcon-dev.com</a></p>
-  <p class="pull-request-url">Pull Request: <a href="{{ build.pull_request_url }}" target="_new">{{ build.pull_request_url }}</a></p>
-</div>
-<hr />
+  {% if build.service == 'bitbucket' %}
+    {% set repository_link = 'https://bitbucket.org/' ~ build.owner ~ '/' ~ build.repository %}
+  {% endif %}
+  {% if build.service == 'github' %}
+    {% set repository_link = 'https://github.com/' ~ build.owner ~ '/' ~ build.repository %}
+  {% endif %}
+  <div class="build">
+    <h2 class="headline"><a href="/probo/build/{{ build.bid }}">{{ build.pull_request_name }} - {{ build.author_name }}</a></h2>
+    <p class="repository">Repository: <a href="{{ repository_link }}">{{ build.owner }}/{{ build.repository }}</a></p>
+    <p class="build-url">Build URL: <a href="http://{{ build.bid }}.{{ probo_builds_domain }}" target="_new">http://{{ build.bid }}.{{ probo_builds_domain }}</a></p>
+    <p class="pull-request-url">Pull Request: <a href="{{ build.pull_request_url }}" target="_new">{{ build.pull_request_url }}</a></p>
+  </div>
+  <hr />
 {% endfor %}

@@ -15,6 +15,9 @@ $base_path = '/home/serviceadmin/probo-loom/data/';
 // Now we need to provide the path to our Probo dashboard server
 $probo_dashboard_url = '';
 
+// Probo builds URL.
+$probo_builds_url = '';
+
 $entries = scandir($base_path);
 foreach ($entries as $entry) {
   if ($entry != "." && $entry != ".." && $entry != 'probo-log-handler.php') {
@@ -67,7 +70,7 @@ foreach ($entries as $entry) {
       // Cap the number of times this will run at 10 to prevent invinite loop errors in the
       // event there are site errors.
       // Keep the build alive. Keep the build aliiiiiive.
-      $url = "http://" . $build_id . '.probo.itcon-dev.com';
+      $url = "http://" . $build_id . '.' . $probo_builds_url;
       $do_again = FALSE;
       $output = [];
       $loop = 0;

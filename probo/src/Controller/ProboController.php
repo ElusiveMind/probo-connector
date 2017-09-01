@@ -2,6 +2,7 @@
 
 namespace Drupal\probo\Controller;
 
+use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Controller\ControllerBase;
 
 use Symfony\Component\HttpFoundation\Request;
@@ -81,7 +82,7 @@ class ProboController extends ControllerBase {
   public function display_active_builds() {
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
-      ->fields('pb', ['id', 'bid', 'repo', 'owner', 'pull_request_name', 'author_name', 'pull_request_url']);
+      ->fields('pb', ['id', 'bid', 'repository', 'owner', 'service', 'pull_request_name', 'author_name', 'pull_request_url']);
     $builds = $query->execute()->fetchAllAssoc('id');
 
     // Assemble the build id's into an array to be iterated through in the template.
@@ -91,9 +92,10 @@ class ProboController extends ControllerBase {
       ];
     }
     else {
-      // Output.
+      $config = $this->config('probo.probosettings');
       return [
-        '#theme' => 'probo_build_index', 
+        '#theme' => 'probo_build_index',
+        '#probo_builds_domain' => $config->get('probo_builds_domain'),
         '#builds' => $builds,
         ''
       ];
@@ -109,18 +111,19 @@ class ProboController extends ControllerBase {
   public function build_details($build_details) {
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
-      ->fields('pb', ['id', 'bid', 'repo', 'owner', 'pull_request_name', 'author_name', 'pull_request_url'])
+      ->fields('pb', ['id', 'bid', 'repository', 'owner', 'service', 'pull_request_name', 'author_name', 'pull_request_url'])
       ->condition('bid', $build_details);
     $build = $query->execute()->fetchAllAssoc('id');
     $build = array_pop($build);
 
     $build_info = [
       'bid' => $build->bid,
-      'repo' => $build->repo,
+      'repositoru' => $build->repository,
       'owner' => $build->owner,
       'pull_request_name' => $build->pull_request_name,
       'author_name' => $build->author_name,
       'pull_request_url' => $build->pull_request_url,
+      'service' => $build->service,
     ];
 
     // Get the builds from our database.
@@ -151,7 +154,6 @@ class ProboController extends ControllerBase {
       ];
     }
 
-    // Output.
     return [
       '#theme' => 'probo_build_details', 
       '#build' => $build_info,
@@ -175,7 +177,7 @@ class ProboController extends ControllerBase {
 
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
-      ->fields('pb', ['id', 'bid', 'repo', 'owner', 'pull_request_name', 'author_name', 'pull_request_url'])
+      ->fields('pb', ['id', 'bid', 'repository', 'owner', 'service', 'pull_request_name', 'author_name', 'pull_request_url'])
       ->condition('bid', $build_details);
     $build = $query->execute()->fetchAllAssoc('id');
     $build = array_pop($build);
@@ -191,23 +193,29 @@ class ProboController extends ControllerBase {
       '#pull_request_name' => $build->pull_request_name,
       '#pull_request_url' => $build->pull_request_url,
       '#owner' => $build->owner,
-      '#repo' => $build->repo,
+      '#repository' => $build->repository,
+      '#service' => $build->service,
     ];
   }
 
-  /**
+ /**
   * process_probo_build().
   * This is what gives the probo build its metadata that we can't get otherwise.
   */
-  public function process_probo_build($build_id, $owner, $repo, $pull_request_name, $author_name, $pull_request_url) {
+  public function process_probo_build($build_id, $owner, $repository, $service, $pull_request_name, $author_name, $pull_request_url) {
+  
+    // The pull request URL is base64 encoded, so we need to decode that before we put it in the database.
+    $pull_request_url = base64_decode($pull_request_url);
+    
+    // Store our build data in the database.
     \Drupal::database()->merge('probo_builds')
       ->key(['bid' => $build_id])
-      ->insertFields(['bid' => $build_id, 'owner' => $owner, 'repo' => $repo, 'pull_request_name' => $pull_request_name,
+      ->insertFields(['bid' => $build_id, 'owner' => $owner, 'repository' => $repository, 'service' => $service,
+        'pull_request_name' => $pull_request_name, 'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
+      ->updateFields(['owner' => $owner, 'repository' => $repository, 'service' => $service, 'pull_request_name' => $pull_request_name, 
         'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
-      ->updateFields(['owner' => $owner, 'repo' => $repo, 'pull_request_name' => $pull_request_name, 'author_name' => $author_name,
-        'pull_request_url' => $pull_request_url])
       ->execute();
 
-      return new RedirectResponse(\Drupal::url('probo.probo_controller_display_active_builds'));1
+    return new RedirectResponse(\Drupal::url('probo.probo_controller_display_active_builds'));
   }
 }

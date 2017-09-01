@@ -13,7 +13,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 function probo_theme($existing, $type, $theme, $path) {
   return [
     'probo_build_index' => [
-      'variables' => ['builds' => []],
+      'variables' => ['builds' => [], 'probo_builds_domain' => NULL],
       'template' => 'probo-build-index',
     ],
     'probo_build_details' => [
@@ -22,8 +22,8 @@ function probo_theme($existing, $type, $theme, $path) {
     ],
     'probo_task_details' => [
       'variables' => ['build_id' => NULL, 'task_id' => NULL, 'plugin' => NULL, 'event_name' => NULL, 
-        'body' => NULL, 'timestamp' => NULL, 'pull_request_name' => NULL, 'owner' => NULL, 'repo' => NULL,
-        'pull_request_url' => NULL],
+        'body' => NULL, 'timestamp' => NULL, 'pull_request_name' => NULL, 'owner' => NULL, 'repository' => NULL,
+        'service' => NULL, 'pull_request_url' => NULL],
       'template' => 'probo-task-details',
     ],
   ];

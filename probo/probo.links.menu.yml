@@ -9,3 +9,11 @@ probo.probo_asset_manager:
   menu_name: main
   description: 'Asset Manager'
   route_name: probo.probo_asset_manager_asset_manager
+
+probo.probo_settings_form:
+  title: 'Settings'
+  route_name: probo.probo_settings_form
+  description: 'General settings for Probo server.'
+  parent: probo.probo_administration_controller_probo_settings
+
+

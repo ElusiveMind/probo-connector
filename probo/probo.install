@@ -23,7 +23,14 @@ function probo_schema() {
         'not null' => TRUE,
         'default' => '',
       ],
-      'repo' => [
+      'service' => [
+        'description' => 'The service for the repository.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'repository' => [
         'description' => 'The repository name.',
         'type' => 'varchar',
         'length' => 255,
@@ -121,9 +128,9 @@ function probo_schema() {
 /**
  * Rename pr_name to pull_request_name and add pull_request_url
  */
-function probo_update_8101 {
+function probo_update_8101() {
   // Initialize our schema object.
-  $schema = Database::getConnection->schema();
+  $schema = Database::getConnection()->schema();
 
   // Add pull_request_url
   $spec = [
@@ -143,4 +150,30 @@ function probo_update_8101 {
     'default' => '0',
   ];
   $schema->changeField('probo_builds', 'pr_name', 'pull_request_name', $spec);
+}
+
+/**
+ * Rename repo to repository and add service
+ */
+function probo_update_8102() {
+  // Initialize our schema object.
+  $schema = Database::getConnection()->schema();
+  
+  $spec = [
+    'description' => 'The service for the repository.',
+    'type' => 'varchar',
+    'length' => 32,
+    'not null' => TRUE,
+    'default' => '',
+  ];
+  $schema->addField('probo_builds', 'service', $spec);
+
+  $spec = [
+    'description' => 'The repository name.',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '0',
+  ];
+  $schema->changeField('probo_builds', 'repo', 'repository', $spec);
 }

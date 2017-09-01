@@ -9,7 +9,7 @@ probo.probo_controller_log_listener:
     _permission: 'access content'
 
 probo.probo_controller_probo_build:
-  path: 'probo-build/{build_id}/{owner}/{repo}/{pull_request_name}/{author_name}{pull_request_url}'
+  path: 'probo-build/{build_id}/{owner}/{repository}/{service}/{pull_request_name}/{author_name}/{pull_request_url}'
   defaults:
     _controller: '\Drupal\probo\Controller\ProboController::process_probo_build'
     _title: 'Process Probo Build'
@@ -55,3 +55,14 @@ probo.probo_asset_manager_asset_manager:
     _title: 'Asset Manager'
   requirements:
     _permission: 'access probo asset manager'
+
+probo.probo_settings_form:
+  path: '/admin/system/config/probo/settings'
+  defaults:
+    _form: '\Drupal\probo\Form\ProboSettingsForm'
+    _title: 'Probo General Settings'
+  requirements:
+    _permission: 'access administration pages'
+  options:
+    _admin_route: TRUE
+
