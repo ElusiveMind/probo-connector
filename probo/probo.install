@@ -7,6 +7,73 @@ use Drupal\Core\Database\Database;
  */
 function probo_schema() {
   $schema = [];
+  $schema['probo_repositories'] = [
+    'description' => 'Configured repositories for the asset manager.',
+    'fields' => [
+      'rid' => [
+        'description' => 'The repository id',
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ],
+      'owner' => [
+        'description' => 'The owner of the repository.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'repository' => [
+        'description' => 'The name of the repository',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'token' => [
+        'description' => 'The token for this bucket.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+    ],
+    'primary key' => ['rid'],
+  ];
+
+  $schema['probo_assets'] = [
+    'description' => 'The assets uploaded for each repository.',
+    'fields' => [
+      'aid' => [
+        'description' => 'The asset id',
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ],
+      'rid' => [
+        'description' => 'The repository id.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'filename' => [
+        'description' => 'The filename of the asset.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'fileid' => [
+        'description' => 'The asset id returned by the asset manager.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+    ],
+    'primary key' => ['aid'],
+  ];
+
   $schema['probo_builds'] = [
     'description' => 'Contains the build id and time the build was created.',
     'fields' => [
@@ -14,7 +81,7 @@ function probo_schema() {
         'description' => 'Serial id for this entry',
         'type' => 'serial',
         'not null' => TRUE,
-        'unassigned' => TRUE,
+        'unsigned' => TRUE,
       ],
       'bid' => [
         'description' => 'The uuid of the build assigned by Probo',
@@ -65,6 +132,13 @@ function probo_schema() {
         'not null' => TRUE,
         'default' => '0',
       ],
+      'active' => [
+        'description' => 'The flag as to whether or not this build is active.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => '1',
+      ],
     ],
     'primary key' => ['id'],
   ];
@@ -76,7 +150,7 @@ function probo_schema() {
         'description' => 'Serial id for this entry',
         'type' => 'serial',
         'not null' => TRUE,
-        'unassigned' => TRUE,
+        'unsigned' => TRUE,
       ],
       'bid' => [
         'description' => 'The uuid of the build assigned by Probo',
@@ -176,4 +250,105 @@ function probo_update_8102() {
     'default' => '0',
   ];
   $schema->changeField('probo_builds', 'repo', 'repository', $spec);
+}
+
+/**
+ * Add our repositories table.
+ */
+function probo_update_8103() {
+  // Initialize our schema object.
+  $schema = Database::getConnection()->schema();
+
+  $spec = [
+    'description' => 'Configured repositories for the asset manager.',
+    'fields' => [
+      'rid' => [
+        'description' => 'The repository id',
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ],
+      'owner' => [
+        'description' => 'The owner of the repository.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'repository' => [
+        'description' => 'The name of the repository',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'token' => [
+        'description' => 'The token for this bucket.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+    ],
+    'primary key' => ['rid'],
+  ];
+
+  $schema->createTable('probo_repositories', $spec);
+}
+
+/**
+ * Add the asset schema table.
+ */
+function probo_update_8104() {
+   // Initialize our schema object.
+   $schema = Database::getConnection()->schema();
+   $spec = [
+    'description' => 'The assets uploaded for each repository.',
+    'fields' => [
+      'aid' => [
+        'description' => 'The asset id',
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ],
+      'rid' => [
+        'description' => 'The repository id.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'filename' => [
+        'description' => 'The filename of the asset.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'fileid' => [
+        'description' => 'The asset id returned by the asset manager.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+    ],
+    'primary key' => ['aid'],
+  ];
+  $schema->createTable('probo_assets', $spec);
+}
+
+/**
+ * Add the active flag to the builds table.
+ */
+function probo_update_8105() {
+  // Initialize our schema object.
+  $schema = Database::getConnection()->schema();
+  $spec = [
+    'description' => 'The flag as to whether or not this build is active.',
+    'type' => 'int',
+    'size' => 'tiny',
+    'not null' => TRUE,
+    'default' => '1',
+  ];
+  $schema->addField('probo_builds', 'active', $spec);
 }

@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Form\ConfigFormBase;
 
 /**
  * Implements hook_theme().
@@ -40,7 +41,6 @@ function probo_help($route_name, RouteMatchInterface $route_match) {
       $output .= '<h3>' . t('About') . '</h3>';
       $output .= '<p>' . t('Integrates with a Probo.CI open source server.') . '</p>';
       return $output;
-
     default:
   }
 }
@@ -49,7 +49,15 @@ function probo_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_cron().
  */
 function probo_cron() {
-  // Check for reaped builds. If we have them, then remove them from the database.
+  // Load our configuration variables for this module. If no domain is configured,
+  // then we cannot run cron.
+  $config = $this->config('probo.probosettings');
+  $domain = $config->get('probo_builds_domain');
+  if (empty($domain)) {
+    return;
+  }
+
+  // Check for reaped builds. If we have them, then mark them as inactive.
   $query = \Drupal::database()->select('probo_builds', 'pb')
     ->fields('pb', ['bid'])
     ->distinct();
@@ -59,8 +67,7 @@ function probo_cron() {
   foreach ($build_objects as $build_object) {
     $build_id = $build_object->bid;
 
-    // @TODO: Make the domain/sub-domain here (and protocol) an admin setting.
-    $url = 'http://' . $build_id . '.probo.itcon-dev.com';
+    $url = 'http://' . $build_id . '.' . $domain;
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_HEADER, 1);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -68,9 +75,10 @@ function probo_cron() {
     curl_close($ch);
 
     if (strpos($response, 'Build has been reaped')) {
-      $query = \Drupal::database()->delete('probo_builds')
-        ->condition('bid', $build_id)
-        ->execute();
+      $query = \Drupal::database()->update('probo_builds');
+      $query->fields(['active' => FALSE]);
+      $query->condition('bid', $build_id);
+      $query->execute();
     }
 
     // For some reasons, our builds are going dormant when first created or after a period

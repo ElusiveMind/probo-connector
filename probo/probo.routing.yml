@@ -1,4 +1,3 @@
-
 probo.probo_controller_log_listener:
   path: 'probo-api/log-listener.json'
   defaults:
@@ -7,7 +6,6 @@ probo.probo_controller_log_listener:
   methods: [POST]
   requirements:
     _permission: 'access content'
-
 probo.probo_controller_probo_build:
   path: 'probo-build/{build_id}/{owner}/{repository}/{service}/{pull_request_name}/{author_name}/{pull_request_url}'
   defaults:
@@ -15,7 +13,6 @@ probo.probo_controller_probo_build:
     _title: 'Process Probo Build'
   requirements:
     _permission: 'access content'
-    
 probo.probo_controller_display_active_builds:
   path: 'probo/display-active-builds'
   defaults:
@@ -23,46 +20,52 @@ probo.probo_controller_display_active_builds:
     _title: 'Active Probo Builds'
   requirements:
     _permission: 'access content'
-
 probo.build_details:
-  path: 'probo/build/{build_details}'
+  path: 'probo/build/{bid}'
   defaults:
     _controller: '\Drupal\probo\Controller\ProboController::build_details'
     _title: 'Build Details'
   requirements:
     _permission: 'access content'
-
 probo.task_details:
-  path: 'probo/build/task/{build_details}/{task_details}'
+  path: 'probo/build/task/{bid}/{tid}'
   defaults:
     _controller: '\Drupal\probo\Controller\ProboController::task_details'
     _title: 'Task Details'
   requirements:
     _permission: 'access content'
-
-probo.probo_administration_controller_probo_settings:
+probo.admin_config_system_probo:
   path: 'admin/config/system/probo'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboAdministrationController::probo_settings'
-    _title: 'Probo'
+    _form: '\Drupal\probo\Form\ProboSettingsForm'
+    _title: 'Probo General Settings'
   requirements:
-    _permission: 'administer probo'
-
-probo.probo_asset_manager_asset_manager:
-  path: '/probo/asset_manager'
-  defaults:
-    _controller: '\Drupal\probo\Controller\ProboAssetManager::asset_manager'
-    _title: 'Asset Manager'
-  requirements:
-    _permission: 'access probo asset manager'
-
-probo.probo_settings_form:
+    _permission: 'access administration pages'
+probo.admin_config_system_probo_settings:
   path: '/admin/system/config/probo/settings'
   defaults:
     _form: '\Drupal\probo\Form\ProboSettingsForm'
     _title: 'Probo General Settings'
   requirements:
     _permission: 'access administration pages'
-  options:
-    _admin_route: TRUE
-
+probo.admin_config_system_probo_repositories:
+  path: '/admin/system/config/probo/repositories'
+  defaults:
+    _controller: '\Drupal\probo\Controller\ProboRepositoryController::display_repositories'
+    _title: 'Repositories'
+  requirements:
+    _permission: 'access administration pages'
+probo.admin_config_system_probo_repositories_add_new:
+  path: '/admin/system/config/probo/repositories/add'
+  defaults:
+    _form: '\Drupal\probo\Form\PropoRepositoryForm'
+    _title: 'Add New Repository'
+  requirements:
+    _permission: 'access administration pages'
+probo.admin_config_system_probo_repositories_delete:
+  path: '/admin/system/config/probo/repositories/delete/{rid}'
+  defaults:
+    _controller: '\Drupal\probo\Controller\ProboRepositoryController::delete_repository'
+    _title: 'Delete Repository'
+  requirements:
+    _permission: 'access administration pages'

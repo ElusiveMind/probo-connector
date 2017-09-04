@@ -78,11 +78,16 @@ class ProboController extends ControllerBase {
    * display_active_builds().
    *
    * Display a list of all the current active builds by id.
+   *
+   * @return array
+   *   The render array for the list of active builds.
    */
-  public function display_active_builds() {
+  public function display_active_builds(): array {
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
-      ->fields('pb', ['id', 'bid', 'repository', 'owner', 'service', 'pull_request_name', 'author_name', 'pull_request_url']);
+      ->fields('pb', ['id', 'bid', 'repository', 'owner', 'service', 'pull_request_name', 
+        'author_name', 'pull_request_url'])
+      ->condition('active', TRUE);
     $builds = $query->execute()->fetchAllAssoc('id');
 
     // Assemble the build id's into an array to be iterated through in the template.
@@ -108,11 +113,12 @@ class ProboController extends ControllerBase {
    * Get the details of the build including a list of all the tasks
    * associated with that build.
    */
-  public function build_details($build_details) {
+  public function build_details($bid): array {
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
-      ->fields('pb', ['id', 'bid', 'repository', 'owner', 'service', 'pull_request_name', 'author_name', 'pull_request_url'])
-      ->condition('bid', $build_details);
+      ->fields('pb', ['id', 'bid', 'repository', 'owner', 'service', 'pull_request_name', 
+        'author_name', 'pull_request_url'])
+      ->condition('bid', $bid);
     $build = $query->execute()->fetchAllAssoc('id');
     $build = array_pop($build);
 
@@ -129,7 +135,7 @@ class ProboController extends ControllerBase {
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_tasks', 'pb')
       ->fields('pb', ['id', 'bid', 'tid', 'event_name', 'plugin', 'timestamp'])
-      ->condition('bid', $build_details)
+      ->condition('bid', $bid)
       ->orderBy('tid', 'ASC');
     $objects = $query->execute()->fetchAllAssoc('id');
 
@@ -166,30 +172,39 @@ class ProboController extends ControllerBase {
    *
    * The output of the task in a command line format. This is the general
    * debugging format that is used for checking for build errors.
+   *
+   * @param int $bid
+   *   The id of the build to get the details of the task
+   * @param int $tid
+   *   The id of the task to get the details for.
+   * @return array
+   *   The render array for the page of task details.
    */
-  public function task_details($build_details, $task_details) {
+  public function task_details($bid, $tid): array {
     // Get the builds from our database.
-    $query = \Drupal::database()->select('probo_tasks', 'pb')
-      ->fields('pb', ['id', 'bid', 'payload', 'event_name', 'plugin', 'timestamp'])
-      ->condition('bid', $build_details)
-      ->condition('tid', $task_details);
-    $object = $query->execute()->fetchAssoc();
+    $query = \Drupal::database()->select('probo_tasks', 'pt')
+      ->fields('pt', ['id', 'bid', 'payload', 'event_name', 'plugin', 'timestamp'])
+      ->condition('bid', $bid)
+      ->condition('tid', $tid);
+    $task = $query->execute()->fetchAllAssoc('id');
+    $task = array_pop($task);
 
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
-      ->fields('pb', ['id', 'bid', 'repository', 'owner', 'service', 'pull_request_name', 'author_name', 'pull_request_url'])
-      ->condition('bid', $build_details);
+      ->fields('pb', ['id', 'bid', 'repository', 'owner', 'service', 'pull_request_name', 
+        'author_name', 'pull_request_url'])
+      ->condition('bid', $bid);
     $build = $query->execute()->fetchAllAssoc('id');
     $build = array_pop($build);
 
     return [
       '#theme' => 'probo_task_details',
-      '#build_id' => $build_details,
-      '#task_id' => $task_details,
-      '#body' => $object['payload'],
-      '#event_name' => $object['event_name'],
-      '#plugin' => $object['plugin'],
-      '#timestamp' => $object['timestamp'],
+      '#build_id' => $bid,
+      '#task_id' => $tid,
+      '#body' => $task->payload,
+      '#event_name' => $task->event_name,
+      '#plugin' => $task->plugin,
+      '#timestamp' => $task->timestamp,
       '#pull_request_name' => $build->pull_request_name,
       '#pull_request_url' => $build->pull_request_url,
       '#owner' => $build->owner,
@@ -202,7 +217,7 @@ class ProboController extends ControllerBase {
   * process_probo_build().
   * This is what gives the probo build its metadata that we can't get otherwise.
   */
-  public function process_probo_build($build_id, $owner, $repository, $service, $pull_request_name, $author_name, $pull_request_url) {
+  public function process_probo_build($build_id, $owner, $repository, $service, $pull_request_name, $author_name, $pull_request_url): RedirectResponse {
   
     // The pull request URL is base64 encoded, so we need to decode that before we put it in the database.
     $pull_request_url = base64_decode($pull_request_url);

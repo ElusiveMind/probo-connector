@@ -1,0 +1,116 @@
+<?php
+
+namespace Drupal\probo\Controller;
+
+use Drupal\Core\Url;
+use Drupal\simpletest\WebTestBase;
+use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+
+/**
+ * Class ProboRepositoryController.
+ */
+class ProboRepositoryController extends ControllerBase {
+
+  /**
+   * display_repositories.
+   *
+   * @return array
+   *   Return render array of a table of elements that make up the list
+   *   of available repositories or an empty list.
+   */
+   public function display_repositories(): array {
+    $query = \Drupal::database()->select('probo_repositories', 'pr')
+      ->fields('pr', ['rid', 'owner', 'repository', 'token'])
+      ->orderBy('owner', 'ASC')
+      ->orderBy('repository', 'ASC');
+    $repositories = $query->execute()->fetchAllAssoc('rid');
+
+    $header = [
+      [
+        'data' => $this->t('Owner'),
+        'style' => 'text-align: center',
+      ],
+      [
+        'data' => $this->t('Repository'),
+        'style' => 'text-align: center',
+      ],
+      [
+        'data' => $this->t('Token'),
+        'style' => 'text-align: center',
+      ],
+      [
+        'data' => $this->t('Actions'),
+        'style' => 'text-align: center',
+      ],
+    ];
+
+    $rows = [];
+    foreach ($repositories as $repository) {
+      $url = Url::fromRoute('probo.admin_config_system_probo_repositories_delete', ['rid' => $repository->rid]);
+      $link = \Drupal::l($this->t('Delete'), $url);
+      $row = [
+        [
+          'data' => $repository->owner,
+          'style' => 'text-align: center; font-family: courier, monospace;',
+        ],
+        [
+          'data' => $repository->repository,
+          'style' => 'text-align: center; font-family: courier, monospace;',
+        ],
+        [
+          'data' => $repository->token,
+          'style' => 'text-align: center; font-family: courier, monospace;',
+        ],
+        [
+          'data' => $link,
+          'style' => 'text-align: center; font-family: courier, monospace;',
+        ],
+      ];
+      $rows[] = $row;
+    }
+
+    return [
+      '#type' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+      '#empty' => 'THERE ARE NO REPOSITORIES CURRENTLY ASSIGNED.',
+    ];
+  }
+
+  /**
+   * delete_repository().
+   *
+   * You cannot technically delete a repository/bucket. But we can remove all
+   * of it's assets and mark it as deleted. If we re-create it, we will just 
+   * re-enable it. Deleting doesn't really delete. It just sets the delete flag
+   * to 1 to hide it from the interface. However, it does actually delete all
+   * of the assets associated with that bucket.
+   *
+   * @param int
+   *   The repository id to remove all of the assets from and mark as deleted.
+   */
+  public function delete_repository($rid): array {
+    $config = $this->config('probo.probosettings');
+
+    // First step is to remove all of the assets from the associated bucket/repo.
+    $query = \Drupal::database()->select('probo_assets', 'pa');
+    $query->fields('pa', ['aid', 'rid', 'filename', 'fileid']);
+    $query->addField('pr', 'owner');
+    $query->addField('pr', 'repository');
+    $query->addField('pr', 'token');
+    $query->join('probo_repositories', 'pr', 'pr.rid = pa.rid');
+    $query->condition('pa.rid', $rid);
+    $assets = $query->execute()->fetchAllAssoc('aid');
+    foreach ($assets as $asset) {
+      $options = [
+        'CURLOPT_URL' => $config->get('asset_manager_url_port'),
+        'CURLOPT_CUSTOMREQUEST' => 'DELETE',
+      ];
+
+      //$this->curlExec();
+    }
+    exit();
+  }
+}

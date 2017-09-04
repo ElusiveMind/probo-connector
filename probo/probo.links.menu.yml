@@ -1,19 +1,20 @@
-probo.probo_administration_controller_probo_settings:
+probo.probo:
   title: 'Probo'
-  parent: system.admin_config_system
   description: 'General settings for the Probo system.'
-  route_name: probo.probo_administration_controller_probo_settings
-
-probo.probo_asset_manager:
-  title: 'Asset Manager'
-  menu_name: main
-  description: 'Asset Manager'
-  route_name: probo.probo_asset_manager_asset_manager
-
-probo.probo_settings_form:
+  route_name: probo.admin_config_system_probo
+  menu_name: probo.probo
+  parent: system.admin_config_system
+probo.probo_settings:
   title: 'Settings'
-  route_name: probo.probo_settings_form
   description: 'General settings for Probo server.'
-  parent: probo.probo_administration_controller_probo_settings
-
-
+  route_name: probo.admin_config_system_probo_settings
+  menu_name: probo.probo_settings
+  parent: probo.probo
+  weight: 1
+probo.probo_repositories:
+  title: 'Repositories'
+  route_name: probo.admin_config_system_probo_repositories
+  description: 'The repositories configured for the Probo asset manager.'
+  menu_name: probo.probor
+  parent: probo.probo
+  weight: 2
