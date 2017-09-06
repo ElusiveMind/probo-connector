@@ -217,7 +217,7 @@ class ProboController extends ControllerBase {
   * process_probo_build().
   * This is what gives the probo build its metadata that we can't get otherwise.
   */
-  public function process_probo_build($build_id, $owner, $repository, $service, $pull_request_name, $author_name, $pull_request_url): RedirectResponse {
+  public function process_probo_build($build_id, $owner, $repository, $service, $pull_request_name, $author_name, $pull_request_url) {
   
     // The pull request URL is base64 encoded, so we need to decode that before we put it in the database.
     $pull_request_url = base64_decode($pull_request_url);

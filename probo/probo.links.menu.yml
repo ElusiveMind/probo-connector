@@ -15,6 +15,13 @@ probo.probo_repositories:
   title: 'Repositories'
   route_name: probo.admin_config_system_probo_repositories
   description: 'The repositories configured for the Probo asset manager.'
-  menu_name: probo.probor
+  menu_name: probo.probo_repositories
   parent: probo.probo
   weight: 2
+probo.probo_assets:
+  title: 'Assets'
+  route_name: probo.admin_config_system_probo_assets
+  description: 'The repositories configured for the Probo asset manager.'
+  menu_name: probo.probo_assets
+  parent: probo.probo
+  weight: 3

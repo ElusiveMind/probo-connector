@@ -37,6 +37,13 @@ function probo_schema() {
         'not null' => TRUE,
         'default' => '',
       ],
+      'active' => [
+        'description' => 'The flag as to whether or not this bucket is active.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => '1',
+      ],
     ],
     'primary key' => ['rid'],
   ];
@@ -351,4 +358,18 @@ function probo_update_8105() {
     'default' => '1',
   ];
   $schema->addField('probo_builds', 'active', $spec);
+}
+
+function probo_update_8106() {
+  // Initialize our schema object.
+  $schema = Database::getConnection()->schema();
+  $spec = [
+    'description' => 'The flag as to whether or not this bucket is active.',
+    'type' => 'int',
+    'size' => 'tiny',
+    'not null' => TRUE,
+    'default' => '1',
+  ];
+  $schema->addField('probo_repositories', 'active', $spec);
+
 }

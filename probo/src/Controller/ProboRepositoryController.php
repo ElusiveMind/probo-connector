@@ -3,10 +3,12 @@
 namespace Drupal\probo\Controller;
 
 use Drupal\Core\Url;
-use Drupal\simpletest\WebTestBase;
+use Drupal\Core\Link;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\probo\Controller\ProboAssetController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Class ProboRepositoryController.
@@ -23,6 +25,7 @@ class ProboRepositoryController extends ControllerBase {
    public function display_repositories(): array {
     $query = \Drupal::database()->select('probo_repositories', 'pr')
       ->fields('pr', ['rid', 'owner', 'repository', 'token'])
+      ->condition('active', TRUE)
       ->orderBy('owner', 'ASC')
       ->orderBy('repository', 'ASC');
     $repositories = $query->execute()->fetchAllAssoc('rid');
@@ -30,11 +33,9 @@ class ProboRepositoryController extends ControllerBase {
     $header = [
       [
         'data' => $this->t('Owner'),
-        'style' => 'text-align: center',
       ],
       [
         'data' => $this->t('Repository'),
-        'style' => 'text-align: center',
       ],
       [
         'data' => $this->t('Token'),
@@ -48,16 +49,15 @@ class ProboRepositoryController extends ControllerBase {
 
     $rows = [];
     foreach ($repositories as $repository) {
-      $url = Url::fromRoute('probo.admin_config_system_probo_repositories_delete', ['rid' => $repository->rid]);
-      $link = \Drupal::l($this->t('Delete'), $url);
+      $link = Link::fromTextAndUrl(t('Delete'), Url::fromRoute('probo.admin_config_system_probo_repositories_delete', ['rid' => $repository->rid]))->toString();
       $row = [
         [
           'data' => $repository->owner,
-          'style' => 'text-align: center; font-family: courier, monospace;',
+          'style' => 'font-family: courier, monospace;',
         ],
         [
           'data' => $repository->repository,
-          'style' => 'text-align: center; font-family: courier, monospace;',
+          'style' => 'font-family: courier, monospace;',
         ],
         [
           'data' => $repository->token,
@@ -71,7 +71,12 @@ class ProboRepositoryController extends ControllerBase {
       $rows[] = $row;
     }
 
+    $url = Url::fromRoute('probo.admin_config_system_probo_repositories_add_new');
+    $link = \Drupal::l($this->t('+ Add Bucket/Repository'), $url);
+    $add_new = $link . "<br /><br />";
+
     return [
+      '#prefix' => $link,
       '#type' => 'table',
       '#header' => $header,
       '#rows' => $rows,
@@ -91,8 +96,9 @@ class ProboRepositoryController extends ControllerBase {
    * @param int
    *   The repository id to remove all of the assets from and mark as deleted.
    */
-  public function delete_repository($rid): array {
+  public function delete_repository($rid): RedirectResponse {
     $config = $this->config('probo.probosettings');
+    $client = \Drupal::httpClient();
 
     // First step is to remove all of the assets from the associated bucket/repo.
     $query = \Drupal::database()->select('probo_assets', 'pa');
@@ -104,13 +110,18 @@ class ProboRepositoryController extends ControllerBase {
     $query->condition('pa.rid', $rid);
     $assets = $query->execute()->fetchAllAssoc('aid');
     foreach ($assets as $asset) {
-      $options = [
-        'CURLOPT_URL' => $config->get('asset_manager_url_port'),
-        'CURLOPT_CUSTOMREQUEST' => 'DELETE',
-      ];
-
-      //$this->curlExec();
+      $buffer = $client->delete($config->get('asset_manager_url_port') . '/buckets/' . $asset->owner . '-' . $asset->repository . '/assets/' . $asset->filename);
+      $body = $buffer->getBody();
+      drupal_set_message($body . ': ' . $asset->filename . ' successfully removed.');
     }
-    exit();
+
+    // Mark the bucket/repo as inactive
+    $query = \Drupal::database()->update('probo_repositories');
+    $query->fields(['active' => 0]);
+    $query->condition('rid', $rid);
+    $query->execute();
+
+    drupal_set_message('Bucket/repository has been successfully removed.');
+    return new RedirectResponse(\Drupal::url('probo.admin_config_system_probo_repositories'));
   }
 }
