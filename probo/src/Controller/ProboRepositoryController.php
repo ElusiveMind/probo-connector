@@ -120,6 +120,6 @@ class ProboRepositoryController extends ControllerBase {
     $query->execute();
 
     drupal_set_message('Bucket/repository has been successfully removed.');
-    return new RedirectResponse(\Drupal::url('probo.admin_config_system_probo_repositories'));
+    return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());
   }
 }

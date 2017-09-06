@@ -2,6 +2,7 @@
 
 namespace Drupal\probo\Controller;
 
+use Drupal\Core\Url;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Controller\ControllerBase;
 
@@ -109,9 +110,11 @@ class ProboController extends ControllerBase {
 
   /**
    * build_details($build_id).
-   *
    * Get the details of the build including a list of all the tasks
    * associated with that build.
+   *
+   * @param int
+   *   The build id for the build that we are displaying the details of.
    */
   public function build_details($bid): array {
     // Get the builds from our database.
@@ -231,6 +234,6 @@ class ProboController extends ControllerBase {
         'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
       ->execute();
 
-    return new RedirectResponse(\Drupal::url('probo.probo_controller_display_active_builds'));
+    return new RedirectResponse(Url::fromRoute('probo.probo_controller_display_active_builds')->toString());
   }
 }

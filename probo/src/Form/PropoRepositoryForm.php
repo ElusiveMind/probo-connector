@@ -2,6 +2,7 @@
 
 namespace Drupal\probo\Form;
 
+use Drupal\Core\Url;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -120,6 +121,6 @@ class PropoRepositoryForm extends FormBase {
         drupal_set_message('Creation issue: ' . $buffer, 'error');
       }
     }
-    return new RedirectResponse(\Drupal::url('probo.admin_config_system_probo_repositories'));
+    return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());
   }
 }

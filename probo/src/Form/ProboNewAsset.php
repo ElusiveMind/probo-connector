@@ -2,9 +2,10 @@
 
 namespace Drupal\probo\Form;
 
+use Drupal\Core\Url;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\File\FileSystem;
-use \Drupal\file\Entity\File;
+use Drupal\file\Entity\File;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -98,13 +99,12 @@ class ProboNewAsset extends FormBase {
     $response = $client->post($config->get('asset_manager_url_port') . '/asset/' . $token . '/' . $filename, ['body' => $data]);
     $fileid = $response->getBody();
 
-    drupal_set_message($fileid);
-
     $query = \Drupal::database()->insert('probo_assets')
       ->fields(['rid', 'filename', 'fileid'])
       ->values([$rid, $filename, $fileid])
       ->execute();
-    
-    return new RedirectResponse(\Drupal::url('probo.admin_config_system_probo_assets'));
+
+    drupal_set_message('The asset ' . $filename . ' has been sucessfully uploaded.');
+    return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_assets')->toString());
   }
 }

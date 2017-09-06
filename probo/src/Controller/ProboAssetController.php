@@ -19,8 +19,8 @@ class ProboAssetController extends ControllerBase {
   /**
    * List_assets.
    *
-   * @return string
-   *   Return Hello string.
+   * @return array
+   *   Return a render array that is a table of assets.
    */
   public function list_assets(): array {
     $query = \Drupal::database()->select('probo_assets', 'pa');
@@ -80,6 +80,15 @@ class ProboAssetController extends ControllerBase {
     ];
   }
 
+  /**
+   * delete_asset($aid)
+   * Remove an asset from the asset handler.
+   *
+   * @param int $aid
+   *   The id of the asset we are removing.
+   * @return RedirectResponse
+   *   Redirect to the list of assets.
+   */
   public function delete_asset($aid): RedirectResponse {
     $client = \Drupal::httpClient();
     $config = $this->config('probo.probosettings');
@@ -99,17 +108,25 @@ class ProboAssetController extends ControllerBase {
     $response = $client->request('DELETE', $config->get('asset_manager_url_port') . '/buckets/' . $assets->owner . '-' . $assets->repository . '/assets/ ' . $assets->filename);
     $buffer = $response->getBody();
 
-    drupal_set_message($buffer);
-
     // Remove the reference from the table.
     $query = \Drupal::database()->delete('probo_assets')
       ->condition('aid', $aid)
       ->execute();
 
-    return new RedirectResponse(\Drupal::url('probo.admin_config_system_probo_assets'));
+    drupal_set_message('The ' . $asset->filename . ' in the ' . $assets->owner . '-' . $assets->repository . ' bucket has been successfully deleted.');
+    return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_assets')->toString());
   }
 
-  public function download_asset($aid): RedirectResponse {
+  /**
+   * download_asset($aid)
+   * Make a call to the asset received daemon and get the file and deliver it to the user.
+   *
+   * @param int $aid
+   *   The id of the asset we are downloading.
+   * @return RedirectResponse
+   *   Redirect to the URL on the asset manager to begin the download.
+   */
+  public function download_asset($aid): TrustedRedirectResponse {
     $client = \Drupal::httpClient();
     $config = $this->config('probo.probosettings');
 
@@ -125,8 +142,8 @@ class ProboAssetController extends ControllerBase {
     $assets = $query->execute()->fetchAllAssoc('rid');
     $assets = array_pop($assets);
 
+    // Construct the URL and then redirect to it to begint the download.
     $url = $config->get('asset_manager_url_port') . '/asset/' . $assets->owner . '-' . $assets->repository . '/' . $assets->filename;
-    
     return new TrustedRedirectResponse($url);
   }
 
