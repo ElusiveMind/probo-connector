@@ -70,24 +70,30 @@ probo.admin_config_system_probo_repositories_delete:
   requirements:
     _permission: 'access administration pages'
 probo.admin_config_system_probo_assets:
-  path: '/admin/admin/system/config/probo/assets'
+  path: '/admin/system/config/probo/assets'
   defaults:
     _controller: '\Drupal\probo\Controller\ProboAssetController::list_assets'
     _title: 'Assets'
   requirements:
    _permission: 'access administration pages'
 probo.admin_config_system_probo_asset_delete:
-  path: '/admin/admin/system/config/probo/assets/delete/{aid}'
+  path: '/admin/system/config/probo/assets/delete/{aid}'
   defaults:
     _controller: '\Drupal\probo\Controller\ProboAssetController::delete_asset'
     _title: 'Delete Asset'
   requirements:
    _permission: 'access administration pages'
 probo.admin_config_system_probo_asset_add:
-  path: '/admin/config/system/probo/assets/add'
+  path: '/admin/system/config/probo/assets/add'
   defaults:
     _form: '\Drupal\probo\Form\ProboNewAsset'
     _title: 'Upload New Asset'
   requirements:
     _permission: 'access administration pages'
-  
+probo.admin_config_system_probo_asset_download:
+  path: '/admin/system/config/probo/assets/download/{aid}'
+  defaults:
+    _controller: '\Drupal\probo\Controller\ProboAssetController::download_asset'
+    _title: 'Download Asset'
+  requirements:
+    _permission: 'access administration pages'

@@ -3,8 +3,11 @@
 namespace Drupal\probo\Form;
 
 use Drupal\Core\Form\FormBase;
+use Drupal\Core\File\FileSystem;
+use \Drupal\file\Entity\File;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Class ProboNewAsset.
@@ -26,12 +29,13 @@ class ProboNewAsset extends FormBase {
     // Get a list of all the owners/organizations and repositories along with the token.
     $query = \Drupal::database()->select('probo_repositories', 'pr')
       ->fields('pr', ['rid', 'owner', 'repository', 'token'])
+      ->condition('pr.active', TRUE)
       ->orderBy('owner', 'ASC')
       ->orderBy('repository', 'ASC');
     $repositories = $query->execute()->fetchAllAssoc('rid');
     $options = [];
     foreach ($repositories as $repository) {
-      $options[$repository->token] = $repository->owner . '-' . $repository->repository;
+      $options[$repository->rid . '-' . $repository->token] = $repository->owner . '-' . $repository->repository;
     }
 
     $form['asset_file'] = [
@@ -71,10 +75,36 @@ class ProboNewAsset extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // Display result.
-    foreach ($form_state->getValues() as $key => $value) {
-      drupal_set_message($key . ': ' . $value);
-    }
+    $client = \Drupal::httpClient();
+    $values = $form_state->getValues();
+    $config = $this->config('probo.probosettings');
 
+    // Handle our uploaded file and save it to the managed table.
+    $upload = $form_state->getValue('asset_file');
+    $file = \Drupal\file\Entity\File::load(reset($upload));
+    $file->setPermanent();
+    $file->save();
+
+    // Get the file system path to the file.
+    $file = \Drupal\file\Entity\File::load(reset($upload));
+    $filename = $file->getFileName();
+    $stream_wrapper_manager = \Drupal::service('stream_wrapper_manager')->getViaUri($file->getFileUri());
+    $file_path = $stream_wrapper_manager->realpath();
+
+    list($rid, $token) = explode('-', $values['owner_repository']);
+
+    // Get the data contents of our file and post it to the asset manager.
+    $data = file_get_contents($file_path);
+    $response = $client->post($config->get('asset_manager_url_port') . '/asset/' . $token . '/' . $filename, ['body' => $data]);
+    $fileid = $response->getBody();
+
+    drupal_set_message($fileid);
+
+    $query = \Drupal::database()->insert('probo_assets')
+      ->fields(['rid', 'filename', 'fileid'])
+      ->values([$rid, $filename, $fileid])
+      ->execute();
+    
+    return new RedirectResponse(\Drupal::url('probo.admin_config_system_probo_assets'));
   }
 }

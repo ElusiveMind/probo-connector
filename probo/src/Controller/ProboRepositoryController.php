@@ -71,10 +71,8 @@ class ProboRepositoryController extends ControllerBase {
       $rows[] = $row;
     }
 
-    $url = Url::fromRoute('probo.admin_config_system_probo_repositories_add_new');
-    $link = \Drupal::l($this->t('+ Add Bucket/Repository'), $url);
-    $add_new = $link . "<br /><br />";
-
+    $link = '<p align="right">' . Link::fromTextAndUrl(t('Add Bucket/Repository'), Url::fromRoute('probo.admin_config_system_probo_repositories_add_new'))->toString() . '</p>';
+    
     return [
       '#prefix' => $link,
       '#type' => 'table',

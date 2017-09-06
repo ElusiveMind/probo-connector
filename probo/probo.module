@@ -6,7 +6,6 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Form\ConfigFormBase;
 
 /**
  * Implements hook_theme().
@@ -51,7 +50,7 @@ function probo_help($route_name, RouteMatchInterface $route_match) {
 function probo_cron() {
   // Load our configuration variables for this module. If no domain is configured,
   // then we cannot run cron.
-  $config = $this->config('probo.probosettings');
+  $config = \Drupal::configFactory()->getEditable('probo.probosettings');
   $domain = $config->get('probo_builds_domain');
   if (empty($domain)) {
     return;
