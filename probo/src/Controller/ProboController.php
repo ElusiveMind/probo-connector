@@ -88,7 +88,7 @@ class ProboController extends ControllerBase {
     $query = \Drupal::database()->select('probo_builds', 'pb')
       ->fields('pb', ['id', 'bid', 'repository', 'owner', 'service', 'pull_request_name', 
         'author_name', 'pull_request_url'])
-      ->condition('active', TRUE);
+      ->condition('active', 1);
     $builds = $query->execute()->fetchAllAssoc('id');
 
     // Assemble the build id's into an array to be iterated through in the template.

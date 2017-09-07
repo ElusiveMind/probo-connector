@@ -74,8 +74,21 @@ function probo_cron() {
     curl_close($ch);
 
     if (strpos($response, 'Build has been reaped')) {
-      $query = \Drupal::database()->update('probo_builds');
-      $query->fields(['active' => FALSE]);
+      $query = \Drupal::database()->update('probo_builds')
+        ->condition('bid', $build_id)
+        ->fields([
+          'active' => 0
+        ])
+        ->execute();
+    }
+    
+    // Proxy errors are grounds for deletion.
+    if (strpos($response, 'Proxy error:')) {
+      $query = \Drupal::database()->delete('probo_builds');
+      $query->condition('bid', $build_id);
+      $query->execute();
+
+      $query = \Drupal::database()->delete('probo_tasks');
       $query->condition('bid', $build_id);
       $query->execute();
     }
