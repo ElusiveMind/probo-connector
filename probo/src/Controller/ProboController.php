@@ -21,13 +21,11 @@ class ProboController extends ControllerBase {
    * Takes the provided input from the script and places it in the database.
    */
   public function log_listener( Request $request ) {
-    
     // Get the input from our posted data. If no data was posted, then we can
     // bail on the operation.
     $data = json_decode($request->getContent(), FALSE);
     
     if (!empty($data)) {
-    
       // Set up local variables to make lives easier.
       $buildId = $data->buildId;
       $taskId = $data->task->id;
@@ -127,7 +125,7 @@ class ProboController extends ControllerBase {
 
     $build_info = [
       'bid' => $build->bid,
-      'repositoru' => $build->repository,
+      'repository' => $build->repository,
       'owner' => $build->owner,
       'pull_request_name' => $build->pull_request_name,
       'author_name' => $build->author_name,
@@ -216,24 +214,47 @@ class ProboController extends ControllerBase {
     ];
   }
 
- /**
-  * process_probo_build().
-  * This is what gives the probo build its metadata that we can't get otherwise.
-  */
-  public function process_probo_build($build_id, $owner, $repository, $service, $pull_request_name, $author_name, $pull_request_url) {
+  /**
+   * service_endpoint().
+   * A replacement for process_probo_build which required an event for the build to show up
+   * in our module directory.
+   */
+  public function service_endpoint( Request $request ): JsonResponse {
   
-    // The pull request URL is base64 encoded, so we need to decode that before we put it in the database.
-    $pull_request_url = base64_decode($pull_request_url);
-    
-    // Store our build data in the database.
-    \Drupal::database()->merge('probo_builds')
-      ->key(['bid' => $build_id])
-      ->insertFields(['bid' => $build_id, 'owner' => $owner, 'repository' => $repository, 'service' => $service,
-        'pull_request_name' => $pull_request_name, 'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
-      ->updateFields(['owner' => $owner, 'repository' => $repository, 'service' => $service, 'pull_request_name' => $pull_request_name, 
-        'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
-      ->execute();
+    // Get the input from our posted data. If no data was posted, then we can
+    // bail on the operation.
+    $data = json_decode($request->getContent(), FALSE);
 
-    return new RedirectResponse(Url::fromRoute('probo.probo_controller_display_active_builds')->toString());
+    if (!empty($data)) {
+      $build_id = $data->build_id;
+      $repository = $data->repo;
+      $owner = $data->owner;
+      $service = $data->service;
+      $pull_request_url = $data->pull_request_url;
+      $pull_request_name = $data->pull_request_name;
+      $author_name = $data->author_name;
+
+      // Store our build data in the database.
+      \Drupal::database()->merge('probo_builds')
+        ->key(['bid' => $build_id])
+        ->insertFields(['bid' => $build_id, 'owner' => $owner, 'repository' => $repository, 'service' => $service,
+          'pull_request_name' => $pull_request_name, 'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
+        ->updateFields(['owner' => $owner, 'repository' => $repository, 'service' => $service, 'pull_request_name' => $pull_request_name, 
+         'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
+        ->execute();
+
+      $response = [
+        'data' => 'Success',
+        'method' => 'GET'
+      ];
+    }
+    else {
+      $response = [
+        'data' => 'Failure',
+        'method' => 'GET'
+      ];
+    }
+
+    return new JsonResponse($response);
   }
 }

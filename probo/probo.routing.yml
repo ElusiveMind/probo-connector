@@ -6,11 +6,12 @@ probo.probo_controller_log_listener:
   methods: [POST]
   requirements:
     _permission: 'access content'
-probo.probo_controller_probo_build:
-  path: 'probo-build/{build_id}/{owner}/{repository}/{service}/{pull_request_name}/{author_name}/{pull_request_url}'
+probo.probo_controller_service_endpoint:
+  path: 'probo-api/service-endpoint.json'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboController::process_probo_build'
-    _title: 'Process Probo Build'
+    _controller: '\Drupal\probo\Controller\ProboController::service_endpoint'
+    _title: 'Probo Log Listener'
+  methods: [POST]
   requirements:
     _permission: 'access content'
 probo.probo_controller_display_active_builds:
