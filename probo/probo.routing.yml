@@ -10,7 +10,7 @@ probo.probo_controller_service_endpoint:
   path: 'probo-api/service-endpoint.json'
   defaults:
     _controller: '\Drupal\probo\Controller\ProboController::service_endpoint'
-    _title: 'Probo Log Listener'
+    _title: 'Probo Status Service Endpoint'
   methods: [POST]
   requirements:
     _permission: 'access content'
