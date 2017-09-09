@@ -101,7 +101,6 @@ class ProboController extends ControllerBase {
         '#theme' => 'probo_build_index',
         '#probo_builds_domain' => $config->get('probo_builds_domain'),
         '#builds' => $builds,
-        ''
       ];
     }
   }

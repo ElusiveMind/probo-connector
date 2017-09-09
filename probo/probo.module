@@ -104,8 +104,8 @@ function probo_cron() {
     do {
       $loop++;
       exec('/usr/bin/wget -Sc ' . $url, $output);
-      if (!empty($output)) {
-        foreach ($ouput as $line) {
+      if (isset($output) && is_array($output)) {
+        foreach ($output as $line) {
           if (strpos($line, 'HTTP/1.1 500')) {
             $do_again = TRUE;
           }
