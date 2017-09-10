@@ -5,6 +5,7 @@ namespace Drupal\probo\Controller;
 use Drupal\Core\Url;
 use Drupal\Core\Link;
 use Drupal\Core\Form\ConfigFormBase;
+use GuzzleHttp\Exception\ConnectException;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\probo\Controller\ProboAssetController;
@@ -108,8 +109,17 @@ class ProboRepositoryController extends ControllerBase {
     $query->condition('pa.rid', $rid);
     $assets = $query->execute()->fetchAllAssoc('aid');
     foreach ($assets as $asset) {
-      $buffer = $client->delete($config->get('asset_manager_url_port') . '/buckets/' . $asset->owner . '-' . $asset->repository . '/assets/' . $asset->filename);
-      $body = $buffer->getBody();
+      try {
+        $buffer = $client->delete($config->get('asset_manager_url_port') . '/buckets/' . $asset->owner . '-' . $asset->repository . '/assets/' . $asset->filename);
+        $body = $buffer->getBody();
+      }
+      catch (ConnectException $e) {
+        $msg = $e->getMessage();
+        if (strpos($msg, 'Failed to connect')) {
+          drupal_set_message('Unable to connect to ' . $config->get('asset_manager_url_port'). ' - please check server or setting', 'error');
+          return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());
+        }
+      }
       drupal_set_message($body . ': ' . $asset->filename . ' successfully removed.');
     }
 

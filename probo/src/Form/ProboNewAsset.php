@@ -3,11 +3,12 @@
 namespace Drupal\probo\Form;
 
 use Drupal\Core\Url;
+use Drupal\file\Entity\File;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\File\FileSystem;
-use Drupal\file\Entity\File;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use GuzzleHttp\Exception\ConnectException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
@@ -96,9 +97,18 @@ class ProboNewAsset extends FormBase {
 
     // Get the data contents of our file and post it to the asset manager.
     $data = file_get_contents($file_path);
-    $response = $client->post($config->get('asset_manager_url_port') . '/asset/' . $token . '/' . $filename, ['body' => $data]);
-    $fileid = $response->getBody();
 
+    try {
+      $response = $client->post($config->get('asset_manager_url_port') . '/asset/' . $token . '/' . $filename, ['body' => $data]);
+      $fileid = $response->getBody();
+    }
+    catch (ConnectException $e) {
+      $msg = $e->getMessage();
+      if (strpos($msg, 'Failed to connect')) {
+        drupal_set_message('Unable to connect to ' . $config->get('asset_manager_url_port'). ' - please check server or setting', 'error');
+        return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_assets')->toString());
+      }
+    }
     $query = \Drupal::database()->insert('probo_assets')
       ->fields(['rid', 'filename', 'fileid'])
       ->values([$rid, $filename, $fileid])

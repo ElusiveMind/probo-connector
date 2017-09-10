@@ -6,6 +6,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use GuzzleHttp\Exception\ConnectException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
@@ -79,13 +80,22 @@ class PropoRepositoryForm extends FormBase {
     ];
     $json = json_encode($data);
 
-    $request = $client->post($config->get('asset_manager_url_port') . '/buckets/' . $values['repository_owner'] . '-' . $values['repository_name'], [
-      'json' => [
-        'creator' => 'Probo Drupal Module',
-        'creation_date' => date('m/d/Y H:i:s')
-      ]
-    ]);
-    $buffer = $request->getBody();
+    try {
+      $request = $client->post($config->get('asset_manager_url_port') . '/buckets/' . $values['repository_owner'] . '-' . $values['repository_name'], [
+        'json' => [
+          'creator' => 'Probo Drupal Module',
+          'creation_date' => date('m/d/Y H:i:s')
+        ]
+      ]);
+      $buffer = $request->getBody();
+    }
+    catch (ConnectException $e) {
+      $msg = $e->getMessage();
+      if (strpos($msg, 'Failed to connect')) {
+        drupal_set_message('Unable to connect to ' . $config->get('asset_manager_url_port'). ' - please check server or setting', 'error');
+        return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());
+      }
+    }
 
     // If we get 'Bucket created' returned, then we were successful. Then we can create the token
     // and continue on in our process.
@@ -99,9 +109,18 @@ class PropoRepositoryForm extends FormBase {
         // If token left empty, create a random hash for our upload token.
         $token = md5(microtime() + rand(0,100000));
       }
-      // Create the upload token on the server.
-      $request = $client->request('POST', $config->get('asset_manager_url_port') . '/buckets/' . $values['repository_owner'] . '-' . $values['repository_name'] . '/token/' . $token);
-      $buffer = $request->getBody();
+
+      try {
+        // Create the upload token on the server.
+        $request = $client->request('POST', $config->get('asset_manager_url_port') . '/buckets/' . $values['repository_owner'] . '-' . $values['repository_name'] . '/token/' . $token);
+        $buffer = $request->getBody();
+      }
+      catch (ConnectException $e) {
+        if (strpos($msg, 'Failed to connect')) {
+          drupal_set_message('Unable to connect to ' . $config->get('asset_manager_url_port'). ' - please check server or setting', 'error');
+          return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());
+        }
+      }
 
       if (!empty($buffer) && $buffer == 'Token created') {
         // If we are here then our bucket and upload token are created, so we can add everything

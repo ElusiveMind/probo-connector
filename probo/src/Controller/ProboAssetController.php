@@ -6,6 +6,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Link;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Controller\ControllerBase;
+use GuzzleHttp\Exception\ConnectException;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
@@ -105,8 +106,17 @@ class ProboAssetController extends ControllerBase {
     $assets = $query->execute()->fetchAllAssoc('rid');
     $assets = array_pop($assets);
 
-    $response = $client->request('DELETE', $config->get('asset_manager_url_port') . '/buckets/' . $assets->owner . '-' . $assets->repository . '/assets/ ' . $assets->filename);
-    $buffer = $response->getBody();
+    try {
+      $response = $client->request('DELETE', $config->get('asset_manager_url_port') . '/buckets/' . $assets->owner . '-' . $assets->repository . '/assets/ ' . $assets->filename);
+      $buffer = $response->getBody();
+    }
+    catch (ConnectException $e) {
+      $msg = $e->getMessage();
+      if (strpos($msg, 'Failed to connect')) {
+        drupal_set_message('Unable to connect to ' . $config->get('asset_manager_url_port'). ' - please check server or setting', 'error');
+        return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_assets')->toString());
+      }
+    }
 
     // Remove the reference from the table.
     $query = \Drupal::database()->delete('probo_assets')
@@ -127,7 +137,6 @@ class ProboAssetController extends ControllerBase {
    *   Redirect to the URL on the asset manager to begin the download.
    */
   public function download_asset($aid): TrustedRedirectResponse {
-    $client = \Drupal::httpClient();
     $config = $this->config('probo.probosettings');
 
     // Get the filename, owner/organization and repository for deleting the asset.

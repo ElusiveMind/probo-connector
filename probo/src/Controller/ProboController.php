@@ -5,7 +5,6 @@ namespace Drupal\probo\Controller;
 use Drupal\Core\Url;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Controller\ControllerBase;
-
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -256,4 +255,5 @@ class ProboController extends ControllerBase {
 
     return new JsonResponse($response);
   }
+
 }
