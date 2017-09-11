@@ -62,13 +62,14 @@ class ProboController extends ControllerBase {
         'data' => 'Success',
         'method' => 'GET'
       ];
-      return new JsonResponse($response);
     }
-    
-    $response = [
-      'data' => 'Failure',
-      'method' => 'GET'
-    ];
+    else {
+      $response = [
+        'data' => 'Failure',
+        'method' => 'GET'
+      ];
+    }
+    drupal_flush_all_caches();
     return new JsonResponse($response);
   }
   

@@ -71,6 +71,8 @@ function probo_cron() {
     curl_setopt($ch, CURLOPT_HEADER, 1);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     $response = curl_exec($ch);
+    $headers = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
     curl_close($ch);
 
     if (strpos($response, 'Build has been reaped')) {
@@ -83,7 +85,7 @@ function probo_cron() {
     }
     
     // Proxy errors are grounds for deletion.
-    if (strpos($response, 'Proxy error:')) {
+    if (strpos($response, 'Proxy error:') || strpos($headers, '404')) {
       $query = \Drupal::database()->delete('probo_builds');
       $query->condition('bid', $build_id);
       $query->execute();
@@ -92,7 +94,7 @@ function probo_cron() {
       $query->condition('bid', $build_id);
       $query->execute();
     }
-
+    
     // For some reasons, our builds are going dormant when first created or after a period
     // of time. In this we kickstart their hearts to make sure we don't get initial errors.
     // Cap the number of times this will run at 10 to prevent invinite loop errors in the
