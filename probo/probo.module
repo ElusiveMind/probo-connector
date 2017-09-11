@@ -59,6 +59,7 @@ function probo_cron() {
   // Check for reaped builds. If we have them, then mark them as inactive.
   $query = \Drupal::database()->select('probo_builds', 'pb')
     ->fields('pb', ['bid'])
+    ->condition('active', 1)
     ->distinct();
   $build_objects = $query->execute()->fetchAllAssoc('bid');
     

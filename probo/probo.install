@@ -146,6 +146,16 @@ function probo_schema() {
         'not null' => TRUE,
         'default' => '1',
       ],
+      'status' => [
+        'description' => 'The status of the current build.',
+        'type' => 'text',
+        'not null' => FALSE,
+      ],
+      'build' => [
+        'description' => 'The build object of the current build.',
+        'type' => 'text',
+        'not null' => FALSE,
+      ],
     ],
     'primary key' => ['id'],
   ];
@@ -371,5 +381,31 @@ function probo_update_8106() {
     'default' => '1',
   ];
   $schema->addField('probo_repositories', 'active', $spec);
+}
 
+function probo_update_8107() {
+  // Initialize our schema object.
+  $schema = Database::getConnection()->schema();
+
+  /* status */
+  $spec = [
+    'description' => 'The status of the current build.',
+    'type' => 'text',
+    'not null' => FALSE,
+  ];
+  $schema->addField('probo_builds', 'status', $spec);
+}
+
+
+function probo_update_8108() {
+  // Initialize our schema object.
+  $schema = Database::getConnection()->schema();
+
+  /* build object */
+  $spec = [
+    'description' => 'The build object of the current build.',
+    'type' => 'text',
+    'not null' => FALSE,
+  ];
+  $schema->addField('probo_builds', 'build', $spec);
 }

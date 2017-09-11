@@ -225,21 +225,24 @@ class ProboController extends ControllerBase {
     $data = json_decode($request->getContent(), FALSE);
 
     if (!empty($data)) {
-      $build_id = $data->build_id;
-      $repository = $data->repo;
-      $owner = $data->owner;
-      $service = $data->service;
-      $pull_request_url = $data->pull_request_url;
-      $pull_request_name = $data->pull_request_name;
-      $author_name = $data->author_name;
+      $build_id = $data->build->id;
+      $repository = $data->build->project->repo;
+      $owner = $data->build->project->owner;
+      $service = $data->build->request->service;
+      $pull_request_url = $data->build->request->pull_request_html_url;
+      $pull_request_name = $data->build->pullRequest->name;
+      $author_name = $data->build->request->payload->pullrequest->author->display_name;
+      $status = serialize($data->status);
+      $build = serialize($data->build);
 
       // Store our build data in the database.
       \Drupal::database()->merge('probo_builds')
         ->key(['bid' => $build_id])
         ->insertFields(['bid' => $build_id, 'owner' => $owner, 'repository' => $repository, 'service' => $service,
-          'pull_request_name' => $pull_request_name, 'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
+          'pull_request_name' => $pull_request_name, 'author_name' => $author_name, 'pull_request_url' => $pull_request_url,
+          'status' => $status, 'build' => $build])
         ->updateFields(['owner' => $owner, 'repository' => $repository, 'service' => $service, 'pull_request_name' => $pull_request_name, 
-         'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
+         'author_name' => $author_name, 'pull_request_url' => $pull_request_url, 'status' => $status, 'build' => $build])
         ->execute();
 
       $response = [
