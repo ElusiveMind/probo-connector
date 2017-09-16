@@ -12,9 +12,12 @@ use Drupal\Core\Routing\RouteMatchInterface;
  */
 function probo_theme($existing, $type, $theme, $path) {
   return [
-    'probo_build_index' => [
-      'variables' => ['builds' => [], 'probo_builds_domain' => NULL],
-      'template' => 'probo-build-index',
+    'probo_active_build_block' => [
+      'variables' => ['title_text_class' => NULL, 'title_anchor_class' => NULL, 'title_links_to' => NULL,
+        'repository' => NULL, 'repository_class' => NULL, 'repository_anchor' => NULL,
+        'pull_request' => NULL, 'pull_request_class' => NULL, 'pull_request_anchor' => NULL,
+        'probo_class' => NULL, 'probo_anchor' => NULL, 'builds' => [], 'probo_builds_domain' => NULL],
+      'template' => 'probo-active-build-block',
     ],
     'probo_build_details' => [
       'variables' => ['build_id' => NULL, 'build' => [], 'tasks' => []],

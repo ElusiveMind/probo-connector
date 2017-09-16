@@ -14,13 +14,6 @@ probo.probo_controller_service_endpoint:
   methods: [POST]
   requirements:
     _permission: 'access content'
-probo.probo_controller_display_active_builds:
-  path: 'probo/display-active-builds'
-  defaults:
-    _controller: '\Drupal\probo\Controller\ProboController::display_active_builds'
-    _title: 'Active Probo Builds'
-  requirements:
-    _permission: 'access content'
 probo.build_details:
   path: 'probo/build/{bid}'
   defaults:

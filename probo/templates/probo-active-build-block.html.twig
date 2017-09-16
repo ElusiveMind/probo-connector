@@ -1,0 +1,36 @@
+<div id="probo-build-index">
+  <h1>Active Probo Builds</h1> 
+  {% for build in builds %}
+    {% set build_details = '/probo/build/' ~  build.bid %}
+    {% set probo_build = build.bid ~ '.' ~ probo_builds_domain %}
+
+    <div class="build">
+      {% if title_links_to == 'Details Of Build Process' %}
+        {% set title_url = build_details %}
+      {% endif %}
+      {% if title_links_to == 'Pull Request' %}
+        {% set title_url = pull_request %}
+      {% endif %}
+      {% if title_links_to == 'Probo Build' %}
+        {% set title_url = probo_build %}
+      {% endif %}
+      <div class="{{ title_text_class }}"><a class="{{ title_anchor_class }}" href="{{ title_url }}">{{ build.pull_request_name }} - {{ build.author_name }}</a></div>
+        
+      {% if repository == 1 %}
+        {% if build.service == 'bitbucket' %}
+          {% set repository_link = 'https://bitbucket.org/' ~ build.owner ~ '/' ~ build.repository %}
+        {% endif %}
+        {% if build.service == 'github' %}
+          {% set repository_link = 'https://github.com/' ~ build.owner ~ '/' ~ build.repository %}
+        {% endif %}
+        <div class="{{ repository_class }}">Repository: <a class={{ repository_anchor }} href="{{ repository_link }}">{{ build.owner }}/{{ build.repository }}</a></div>
+      {% endif %}
+
+      <div class="{{ probo_class }}">Build URL: <a class="{{ probo_anchor }}" href="http://{{ build.bid }}.{{ probo_builds_domain }}" target="_new">http://{{ build.bid }}.{{ probo_builds_domain }}</a></div>
+      
+      {% if pull_request == 1 %}
+        <div class="pull_request_class">Pull Request: <a class="{{ pull_request_anchor }}" href="{{ build.pull_request_url }}" target="_new">{{ build.pull_request_url }}</a></div>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>

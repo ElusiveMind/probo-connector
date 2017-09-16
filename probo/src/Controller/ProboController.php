@@ -74,38 +74,6 @@ class ProboController extends ControllerBase {
   }
   
   /**
-   * display_active_builds().
-   *
-   * Display a list of all the current active builds by id.
-   *
-   * @return array
-   *   The render array for the list of active builds.
-   */
-  public function display_active_builds(): array {
-    // Get the builds from our database.
-    $query = \Drupal::database()->select('probo_builds', 'pb')
-      ->fields('pb', ['id', 'bid', 'repository', 'owner', 'service', 'pull_request_name', 
-        'author_name', 'pull_request_url'])
-      ->condition('active', 1);
-    $builds = $query->execute()->fetchAllAssoc('id');
-
-    // Assemble the build id's into an array to be iterated through in the template.
-    if (empty(count($builds))) {
-      return [
-        '#markup' => 'There are no active Probo builds to display.',
-      ];
-    }
-    else {
-      $config = $this->config('probo.probosettings');
-      return [
-        '#theme' => 'probo_build_index',
-        '#probo_builds_domain' => $config->get('probo_builds_domain'),
-        '#builds' => $builds,
-      ];
-    }
-  }
-
-  /**
    * build_details($build_id).
    * Get the details of the build including a list of all the tasks
    * associated with that build.
