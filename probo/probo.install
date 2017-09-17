@@ -419,5 +419,5 @@ function probo_update_8109() {
   $schema = Database::getConnection()->schema();
 
   $spec = ['bid'];
-  $schema->addUniqueKey('probo_builds', $spec);
+  $schema->addUniqueKey('probo_builds', 'bid', $spec);
 }
