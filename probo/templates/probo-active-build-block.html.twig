@@ -1,5 +1,4 @@
 <div id="probo-build-index">
-  <h1>Active Probo Builds</h1> 
   {% for build in builds %}
     {% set build_details = '/probo/build/' ~  build.bid %}
     {% set probo_build = build.bid ~ '.' ~ probo_builds_domain %}

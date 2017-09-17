@@ -13,9 +13,14 @@ use Drupal\Core\Routing\RouteMatchInterface;
 function probo_theme($existing, $type, $theme, $path) {
   return [
     'probo_active_build_block' => [
-      'variables' => ['title_text_class' => NULL, 'title_anchor_class' => NULL, 'title_links_to' => NULL,
+      'variables' => [
+        'title_label' => NULL, 'title_tag' => NULL, 'title_text_class' => NULL, 
+        'title_anchor_class' => NULL, 'title_links_to' => NULL,
+        'repository_label' => NULL, 'repository_tag' => NULL,
         'repository' => NULL, 'repository_class' => NULL, 'repository_anchor' => NULL,
+        'pull_request_label' => NULL, 'pull_request_tag' => NULL,
         'pull_request' => NULL, 'pull_request_class' => NULL, 'pull_request_anchor' => NULL,
+        'probo_label' => NULL, 'probo_tag' => NULL,
         'probo_class' => NULL, 'probo_anchor' => NULL, 'builds' => [], 'probo_builds_domain' => NULL],
       'template' => 'probo-active-build-block',
     ],
