@@ -13,7 +13,7 @@
       {% if title_links_to == 'Probo Build' %}
         {% set title_url = probo_build %}
       {% endif %}
-      <div class="{{ title_text_class }}"><a class="{{ title_anchor_class }}" href="{{ title_url }}">{{ build.pull_request_name }} - {{ build.author_name }}</a></div>
+      <{{ title_tag }} class="{{ title_text_class }}">{{ title_label }}<a class="{{ title_anchor_class }}" href="{{ title_url }}">{{ build.pull_request_name }} - {{ build.author_name }}</a></{{ title_tag }}>
         
       {% if repository == 1 %}
         {% if build.service == 'bitbucket' %}
@@ -22,13 +22,13 @@
         {% if build.service == 'github' %}
           {% set repository_link = 'https://github.com/' ~ build.owner ~ '/' ~ build.repository %}
         {% endif %}
-        <div class="{{ repository_class }}">Repository: <a class={{ repository_anchor }} href="{{ repository_link }}">{{ build.owner }}/{{ build.repository }}</a></div>
+        <{{ repository_tag }} class="{{ repository_class }}">{{ repository_label }}<a class={{ repository_anchor }} href="{{ repository_link }}">{{ build.owner }}/{{ build.repository }}</a></{{ repository_tag }}>
       {% endif %}
 
-      <div class="{{ probo_class }}">Build URL: <a class="{{ probo_anchor }}" href="http://{{ build.bid }}.{{ probo_builds_domain }}" target="_new">http://{{ build.bid }}.{{ probo_builds_domain }}</a></div>
+      <{{ probo_tag }} class="{{ probo_class }}">{{ probo_label }}<a class="{{ probo_anchor }}" href="http://{{ build.bid }}.{{ probo_builds_domain }}" target="_new">http://{{ build.bid }}.{{ probo_builds_domain }}</a></{{ probo_tag }}>
       
       {% if pull_request == 1 %}
-        <div class="pull_request_class">Pull Request: <a class="{{ pull_request_anchor }}" href="{{ build.pull_request_url }}" target="_new">{{ build.pull_request_url }}</a></div>
+        <{{ pull_request_tag }} class="{{ pull_request_class }}">{{ pull_request_label }}<a class="{{ pull_request_anchor }}" href="{{ build.pull_request_url }}" target="_new">{{ build.pull_request_url }}</a></{{ pull_request_tag }}>
       {% endif %}
     </div>
   {% endfor %}

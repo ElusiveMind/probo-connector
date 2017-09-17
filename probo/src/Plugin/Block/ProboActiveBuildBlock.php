@@ -227,6 +227,10 @@ class ProboActiveBuildBlock extends BlockBase {
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
 
+    // If you put fields in a fieldset, then they are contained in an array under
+    // that fieldset. To load the array, getValue of the fieldset name and the 
+    // variable names are the subset of that fieldset array name.
+    
     $title = $form_state->getValue('title');
     $this->configuration['title_label'] = $title['title_label'];
     $this->configuration['title_label_tag'] = $title['title_label_tag'];
@@ -235,22 +239,22 @@ class ProboActiveBuildBlock extends BlockBase {
     $this->configuration['title_anchor_classes'] = $title['title_anchor_classes'];
 
     $repository = $form_state->getValue('repository');
-    $this->configuration['display_repository_tabel'] = $repository['display_repository_tabel'];
-    $this->configuration['display_repository_tag'] = $repository['display_repository_tabel_tag'];
+    $this->configuration['display_repository_label'] = $repository['display_repository_label'];
+    $this->configuration['display_repository_tag'] = $repository['display_repository_tag'];
     $this->configuration['display_repository_with_link'] = $repository['display_repository_with_link'];
     $this->configuration['display_repository_text_classes'] = $repository['display_repository_text_classes'];
     $this->configuration['display_repository_anchor_classes'] = $repository['display_repository_anchor_classes'];
 
     $pull_request = $form_state->getValue('pull_request');
-    $this->configuration['display_pull_request_label'] = $repository['display_pull_request_label'];
-    $this->configuration['display_pull_request_tag'] = $repository['display_pull_request_tag'];
+    $this->configuration['display_pull_request_label'] = $pull_request['display_pull_request_label'];
+    $this->configuration['display_pull_request_tag'] = $pull_request['display_pull_request_tag'];
     $this->configuration['display_pull_request_with_link'] = $pull_request['display_pull_request_with_link'];
     $this->configuration['display_pull_request_text_classes'] = $pull_request['display_pull_request_text_classes'];
     $this->configuration['display_pull_request_anchor_classes'] = $pull_request['display_pull_request_anchor_classes'];
 
     $probo = $form_state->getValue('probo');
-    $this->configuration['display_probo_label'] = $repository['display_probo_label'];
-    $this->configuration['display_probo_tag'] = $repository['display_probo_tag'];
+    $this->configuration['display_probo_label'] = $probo['display_probo_label'];
+    $this->configuration['display_probo_tag'] = $probo['display_probo_tag'];
     $this->configuration['display_probo_link_text_class'] = $probo['display_probo_link_text_class'];
     $this->configuration['display_probo_link_anchor_class'] = $probo['display_probo_link_anchor_class'];
   }
@@ -284,7 +288,7 @@ class ProboActiveBuildBlock extends BlockBase {
         '#probo_builds_domain' => $config->get('probo_builds_domain'),
         '#builds' => $builds,
         '#title_label' => $block_config['title_label'],
-        '#title_label_tag' => $block_config['title_label_tag'],
+        '#title_tag' => $block_config['title_label_tag'],
         '#title_links_to' => $block_config['title_links_to'],
         '#title_class' => $block_config['title_classes'],
         '#title_anchor_class' => $block_config['title_anchor_classes'],
