@@ -158,6 +158,7 @@ function probo_schema() {
       ],
     ],
     'primary key' => ['id'],
+    'unique keys' => ['bid' => ['bid']],
   ];
 
   $schema['probo_tasks'] = [
@@ -408,4 +409,15 @@ function probo_update_8108() {
     'not null' => FALSE,
   ];
   $schema->addField('probo_builds', 'build', $spec);
+}
+
+/**
+ * Add the unique key to our bid column.
+ */
+function probo_update_8109() {
+  // Initialize our schema object.
+  $schema = Database::getConnection()->schema();
+
+  $spec = ['bid'];
+  $schema->addUniqueKey('probo_builds', $spec);
 }
