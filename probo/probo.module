@@ -91,6 +91,7 @@ function probo_cron() {
           'active' => 0
         ])
         ->execute();
+      continue;
     }
     
     // Proxy errors are grounds for deletion.
@@ -124,4 +125,5 @@ function probo_cron() {
       }
     } while ($do_again == TRUE && $loop < 10);
   }
+  drupal_flush_all_caches();
 }
