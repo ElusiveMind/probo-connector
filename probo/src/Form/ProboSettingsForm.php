@@ -38,8 +38,13 @@ class ProboSettingsForm extends ConfigFormBase {
     ];
     $form['probo_asset_manager'] = [
       '#type' => 'fieldset',
-      '#title' => 'Asset Manager Configuration',
+      '#title' => 'Asset Receiver Configuration',
       '#weight' => 1,
+    ];
+    $form['probo_loom'] = [
+      '#type' => 'fieldset',
+      '#title' => 'Loom Service Configuration',
+      '#weight' => 2,
     ];
     $form['probo_general']['probo_builds_domain'] = [
       '#type' => 'textfield',
@@ -68,6 +73,24 @@ class ProboSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('asset_manager_upload_token'),
       '#weight' => 1,
     ];
+    $form['probo_loom']['probo_loom_stream_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Probo Loom URL'),
+      '#description' => $this->t('The URL for the location of the loom service - Include the port number with colon.'),
+      '#maxlength' => 64,
+      '#size' => 64,
+      '#default_value' => $config->get('probo_loom_stream_url'),
+      '#weight' => 0,
+    ];
+    $form['probo_loom']['probo_loom_stream_token'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Loom Bearer Token'),
+      '#description' => $this->t('The token configured for use with your loom service.'),
+      '#maxlength' => 64,
+      '#size' => 64,
+      '#default_value' => $config->get('probo_loom_stream_token'),
+      '#weight' => 1,
+    ];
     return parent::buildForm($form, $form_state);
   }
 
@@ -91,6 +114,12 @@ class ProboSettingsForm extends ConfigFormBase {
       ->save();
     $this->config('probo.probosettings')
       ->set('asset_manager_upload_token', $form_state->getValue('asset_manager_upload_token'))
+      ->save();
+    $this->config('probo.probosettings')
+      ->set('probo_loom_stream_url', $form_state->getValue('probo_loom_stream_url'))
+      ->save();
+    $this->config('probo.probosettings')
+      ->set('probo_loom_stream_token', $form_state->getValue('probo_loom_stream_token'))
       ->save();
   }
 }

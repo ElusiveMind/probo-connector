@@ -15,65 +15,6 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 class ProboController extends ControllerBase {
 
   /**
-   * log_listener()
-   *
-   * Takes the provided input from the script and places it in the database.
-   */
-  public function log_listener( Request $request ) {
-    // Get the input from our posted data. If no data was posted, then we can
-    // bail on the operation.
-    $data = json_decode($request->getContent(), FALSE);
-    
-    if (!empty($data)) {
-      // Set up local variables to make lives easier.
-      $buildId = $data->buildId;
-      $taskId = $data->task->id;
-      $name = $data->task->name;
-      $plugin = $data->task->plugin;
-      $body = $data->body;
-      $action = $data->action;
-      $timestamp = $data->file_time;
-    
-      // Delete the record from our database if we are specifically told
-      // to do so only.
-      if ($data->action == 'delete') {
-        \Drupal::database()->delete('probo_tasks')
-          ->condition('bid', $buildId)
-          ->condition('tid', $taskId)
-          ->execute();
-        
-        \Drupal::database()->detete('probo_builds')
-          ->condition('bid', $buildId)
-          ->execute();
-      }
-      // Just because we're not deleting doesn't mean we're adding. We may
-      // be updating. If we have a record and a file, then do an update.
-      // Otherwise, add new.
-      elseif ($data->action == 'info') {
-        \Drupal::database()->merge('probo_tasks')
-          ->key(['bid' => $buildId, 'tid' => $taskId])
-          ->insertFields(['bid' => $buildId, 'tid' => $taskId, 'event_name' => $name, 'plugin' => $plugin, 
-            'payload' => $body, 'timestamp' => $timestamp])
-          ->updateFields(['event_name' => $name, 'plugin' => $plugin, 'payload' => $body, 'timestamp' => $timestamp])
-          ->execute();
-      }
-    
-      $response = [
-        'data' => 'Success',
-        'method' => 'GET'
-      ];
-    }
-    else {
-      $response = [
-        'data' => 'Failure',
-        'method' => 'GET'
-      ];
-    }
-    drupal_flush_all_caches();
-    return new JsonResponse($response);
-  }
-  
-  /**
    * build_details($build_id).
    * Get the details of the build including a list of all the tasks
    * associated with that build.
@@ -81,7 +22,7 @@ class ProboController extends ControllerBase {
    * @param int
    *   The build id for the build that we are displaying the details of.
    */
-  public function build_details($bid): array {
+  public function build_details($bid) {
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_builds', 'pb')
       ->fields('pb', ['id', 'bid', 'repository', 'owner', 'service', 'pull_request_name', 
@@ -148,7 +89,7 @@ class ProboController extends ControllerBase {
    * @return array
    *   The render array for the page of task details.
    */
-  public function task_details($bid, $tid): array {
+  public function task_details($bid, $tid) {
     // Get the builds from our database.
     $query = \Drupal::database()->select('probo_tasks', 'pt')
       ->fields('pt', ['id', 'bid', 'payload', 'event_name', 'plugin', 'timestamp'])
@@ -186,31 +127,48 @@ class ProboController extends ControllerBase {
    * A replacement for process_probo_build which required an event for the build to show up
    * in our module directory.
    */
-  public function service_endpoint( Request $request ): JsonResponse {
+  public function service_endpoint( Request $request ) {
   
     // Get the input from our posted data. If no data was posted, then we can
     // bail on the operation.
     $data = json_decode($request->getContent(), FALSE);
 
     if (!empty($data)) {
-      $build_id = $data->build->id;
-      $repository = $data->build->project->repo;
-      $owner = $data->build->project->owner;
-      $service = $data->build->request->service;
-      $pull_request_url = $data->build->request->pull_request_html_url;
-      $pull_request_name = $data->build->pullRequest->name;
-      $author_name = $data->build->request->payload->pullrequest->author->display_name;
-      $status = serialize($data->status);
-      $build = serialize($data->build);
+      $build_id = $data->build_id;
+      $repository = $data->repository;
+      $owner = $data->owner;
+      $service = $data->service;
+      $pull_request_url = $data->pull_request_html_url;
+      $pull_request_name = $data->pull_request_name;
+      $author_name = $data->build->author_name;
+      $task_id = $data->task_id;
+      $task_name = $data->task_name;
+      $task_plugin = $data->task_plugin;
+      $task_description = $data->task_description;
+      $task_context = $data->task_context;
+      $task_state = $data->task_state;
+      $task_time = microtime(TRUE);
+      
+      $stream_code = 'build-' . $build_id . '-task-' . $task_id;
+      $task_payload = get_loom_stream($build_id, $task_id, $stream_code);
 
-      // Store our build data in the database.
+      // Store our build data in the build table.
       \Drupal::database()->merge('probo_builds')
         ->key(['bid' => $build_id])
         ->insertFields(['bid' => $build_id, 'owner' => $owner, 'repository' => $repository, 'service' => $service,
-          'pull_request_name' => $pull_request_name, 'author_name' => $author_name, 'pull_request_url' => $pull_request_url,
-          'status' => $status, 'build' => $build])
+          'pull_request_name' => $pull_request_name, 'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
         ->updateFields(['owner' => $owner, 'repository' => $repository, 'service' => $service, 'pull_request_name' => $pull_request_name, 
-         'author_name' => $author_name, 'pull_request_url' => $pull_request_url, 'status' => $status, 'build' => $build])
+         'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
+        ->execute();
+      
+      // Store our individual task data in the task table.
+      \Drupal::database()->merge('probo_tasks')
+        ->key(['bid' => $build_id, 'tid' => $task_id])
+        ->insertFields(['bid' => $build_id, 'tid' => $task_id, 'timestamp' => (string) $task_time, 'state' => $task_state,
+          'event_name' => $task_name, 'event_description' => $task_description, 'plugin' => $task_plugin, 'context' => $task_context,
+          'payload' => $task_payload])
+        ->updateFields(['timestamp' => (string) $task_time, 'state' => $task_state, 'event_name' => $task_name, 
+          'event_description' => $task_description, 'plugin' => $task_plugin, 'context' => $task_context, 'payload' => $task_payload])
         ->execute();
 
       $response = [
@@ -228,4 +186,33 @@ class ProboController extends ControllerBase {
     return new JsonResponse($response);
   }
 
+  /**
+   * get_loom_stream()
+   * 
+   * @param string $build_id
+   *   The id of the build to get the details of the task
+   * @param string $task_id
+   *   The id of the task to get the details for.
+   * @param string $stream_code
+   *   The stream code stored in the loom made up of build and task id
+   * @return string
+   *   The data from probo-loom
+   */
+  private function get_loom_stream($build_id, $task_id, $stream_code) {
+    $config = $this->config('probo.probosettings');
+
+    $loom_stream_url = $config->get('probo_loom_stream_url') . '/stream/' . $stream_code;
+    $loom_stream_token = $config->get('probo_loom_stream_token');
+    $options = array(
+      'http' => array(
+        'header' => array(
+          'Authorization: Bearer ' . $loom_stream_token,
+        ),
+        'method' => 'GET'
+      )
+    );
+    $context = stream_context_create($options);
+    $result = file_get_contents($loom_stream_url, false, $context);
+    return $result;
+  }
 }

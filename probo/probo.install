@@ -146,30 +146,14 @@ function probo_schema() {
         'not null' => TRUE,
         'default' => '1',
       ],
-      'status' => [
-        'description' => 'The status of the current build.',
-        'type' => 'text',
-        'not null' => FALSE,
-      ],
-      'build' => [
-        'description' => 'The build object of the current build.',
-        'type' => 'text',
-        'not null' => FALSE,
-      ],
     ],
     'primary key' => ['id'],
     'unique keys' => ['bid' => ['bid']],
   ];
 
   $schema['probo_tasks'] = [
-    'description' => 'Contains the build id and time the build was created.',
+    'description' => 'Contains individual task details for each build.',
     'fields' => [
-      'id' => [
-        'description' => 'Serial id for this entry',
-        'type' => 'serial',
-        'not null' => TRUE,
-        'unsigned' => TRUE,
-      ],
       'bid' => [
         'description' => 'The uuid of the build assigned by Probo',
         'type' => 'varchar',
@@ -184,8 +168,29 @@ function probo_schema() {
         'not null' => TRUE,
         'default' => '',
       ],
+      'timestamp' => [
+        'description' => 'The microtime this file was created.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '0',
+      ],
+      'state' => [
+        'description' => 'The state of the current task.',
+        'type' => 'varchar',
+        'length' => 16,
+        'not null' => TRUE,
+        'default' => '',
+      ],
       'event_name' => [
         'description' => 'The name of the event as specified by Probo.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'event_description' => [
+        'description' => 'The description of the event as specified by Probo.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
@@ -198,12 +203,12 @@ function probo_schema() {
         'not null' => TRUE,
         'default' => '',
       ],
-      'timestamp' => [
-        'description' => 'The microtime this file was created.',
+      'context' => [
+        'description' => 'The context of the task.',
         'type' => 'varchar',
-        'length' => 32,
+        'length' => 255,
         'not null' => TRUE,
-        'default' => '0',
+        'default' => '',
       ],
       'payload' => [
         'description' => 'The output of the event.',
@@ -212,212 +217,7 @@ function probo_schema() {
         'not null' => TRUE,
       ],
     ],
-    'primary key' => ['id'],
+    'primary key' => ['bid', 'tid'],
   ];
   return $schema;
-}
-
-/**
- * Rename pr_name to pull_request_name and add pull_request_url
- */
-function probo_update_8101() {
-  // Initialize our schema object.
-  $schema = Database::getConnection()->schema();
-
-  // Add pull_request_url
-  $spec = [
-    'description' => 'The pull request url for this build.',
-    'type' => 'varchar',
-    'length' => 255,
-    'not null' => TRUE,
-    'default' => '',
-  ];  
-  $schema->addField('probo_builds', 'pull_request_url', $spec);
-
-  $spec = [
-    'description' => 'The name of the pull request.',
-    'type' => 'varchar',
-    'length' => 255,
-    'not null' => TRUE,
-    'default' => '0',
-  ];
-  $schema->changeField('probo_builds', 'pr_name', 'pull_request_name', $spec);
-}
-
-/**
- * Rename repo to repository and add service
- */
-function probo_update_8102() {
-  // Initialize our schema object.
-  $schema = Database::getConnection()->schema();
-  
-  $spec = [
-    'description' => 'The service for the repository.',
-    'type' => 'varchar',
-    'length' => 32,
-    'not null' => TRUE,
-    'default' => '',
-  ];
-  $schema->addField('probo_builds', 'service', $spec);
-
-  $spec = [
-    'description' => 'The repository name.',
-    'type' => 'varchar',
-    'length' => 255,
-    'not null' => TRUE,
-    'default' => '0',
-  ];
-  $schema->changeField('probo_builds', 'repo', 'repository', $spec);
-}
-
-/**
- * Add our repositories table.
- */
-function probo_update_8103() {
-  // Initialize our schema object.
-  $schema = Database::getConnection()->schema();
-
-  $spec = [
-    'description' => 'Configured repositories for the asset manager.',
-    'fields' => [
-      'rid' => [
-        'description' => 'The repository id',
-        'type' => 'serial',
-        'not null' => TRUE,
-        'unsigned' => TRUE,
-      ],
-      'owner' => [
-        'description' => 'The owner of the repository.',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-      ],
-      'repository' => [
-        'description' => 'The name of the repository',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-      ],
-      'token' => [
-        'description' => 'The token for this bucket.',
-        'type' => 'varchar',
-        'length' => 32,
-        'not null' => TRUE,
-        'default' => '',
-      ],
-    ],
-    'primary key' => ['rid'],
-  ];
-
-  $schema->createTable('probo_repositories', $spec);
-}
-
-/**
- * Add the asset schema table.
- */
-function probo_update_8104() {
-   // Initialize our schema object.
-   $schema = Database::getConnection()->schema();
-   $spec = [
-    'description' => 'The assets uploaded for each repository.',
-    'fields' => [
-      'aid' => [
-        'description' => 'The asset id',
-        'type' => 'serial',
-        'not null' => TRUE,
-        'unsigned' => TRUE,
-      ],
-      'rid' => [
-        'description' => 'The repository id.',
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-      ],
-      'filename' => [
-        'description' => 'The filename of the asset.',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-      ],
-      'fileid' => [
-        'description' => 'The asset id returned by the asset manager.',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-      ],
-    ],
-    'primary key' => ['aid'],
-  ];
-  $schema->createTable('probo_assets', $spec);
-}
-
-/**
- * Add the active flag to the builds table.
- */
-function probo_update_8105() {
-  // Initialize our schema object.
-  $schema = Database::getConnection()->schema();
-  $spec = [
-    'description' => 'The flag as to whether or not this build is active.',
-    'type' => 'int',
-    'size' => 'tiny',
-    'not null' => TRUE,
-    'default' => '1',
-  ];
-  $schema->addField('probo_builds', 'active', $spec);
-}
-
-function probo_update_8106() {
-  // Initialize our schema object.
-  $schema = Database::getConnection()->schema();
-  $spec = [
-    'description' => 'The flag as to whether or not this bucket is active.',
-    'type' => 'int',
-    'size' => 'tiny',
-    'not null' => TRUE,
-    'default' => '1',
-  ];
-  $schema->addField('probo_repositories', 'active', $spec);
-}
-
-function probo_update_8107() {
-  // Initialize our schema object.
-  $schema = Database::getConnection()->schema();
-
-  /* status */
-  $spec = [
-    'description' => 'The status of the current build.',
-    'type' => 'text',
-    'not null' => FALSE,
-  ];
-  $schema->addField('probo_builds', 'status', $spec);
-}
-
-
-function probo_update_8108() {
-  // Initialize our schema object.
-  $schema = Database::getConnection()->schema();
-
-  /* build object */
-  $spec = [
-    'description' => 'The build object of the current build.',
-    'type' => 'text',
-    'not null' => FALSE,
-  ];
-  $schema->addField('probo_builds', 'build', $spec);
-}
-
-/**
- * Add the unique key to our bid column.
- */
-function probo_update_8109() {
-  // Initialize our schema object.
-  $schema = Database::getConnection()->schema();
-
-  $spec = ['bid'];
-  $schema->addUniqueKey('probo_builds', 'bid', $spec);
 }

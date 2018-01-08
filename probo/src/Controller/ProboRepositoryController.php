@@ -23,7 +23,7 @@ class ProboRepositoryController extends ControllerBase {
    *   Return render array of a table of elements that make up the list
    *   of available repositories or an empty list.
    */
-   public function display_repositories(): array {
+   public function display_repositories() {
     $query = \Drupal::database()->select('probo_repositories', 'pr')
       ->fields('pr', ['rid', 'owner', 'repository', 'token'])
       ->condition('active', TRUE)
@@ -95,7 +95,7 @@ class ProboRepositoryController extends ControllerBase {
    * @param int
    *   The repository id to remove all of the assets from and mark as deleted.
    */
-  public function delete_repository($rid): RedirectResponse {
+  public function delete_repository($rid) {
     $config = $this->config('probo.probosettings');
     $client = \Drupal::httpClient();
 
