@@ -138,7 +138,7 @@ class ProboController extends ControllerBase {
       $repository = $data->repository;
       $owner = $data->owner;
       $service = $data->service;
-      $pull_request_url = $data->pull_request_html_url;
+      $pull_request_url = $data->pull_request_url;
       $pull_request_name = $data->pull_request_name;
       $author_name = $data->author_name;
       $task_id = $data->task_id;
