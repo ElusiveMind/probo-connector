@@ -16,7 +16,6 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  */
 class ProboNewAsset extends FormBase {
 
-
   /**
    * {@inheritdoc}
    */
@@ -80,6 +79,8 @@ class ProboNewAsset extends FormBase {
     $client = \Drupal::httpClient();
     $values = $form_state->getValues();
     $config = $this->config('probo.probosettings');
+    $asset_receiver_url = $config->get('asset_receiver_url_port');
+    $asset_receiver_token = $config->get('asset_receiver_token');
 
     // Handle our uploaded file and save it to the managed table.
     $upload = $form_state->getValue('asset_file');
@@ -99,13 +100,30 @@ class ProboNewAsset extends FormBase {
     $data = file_get_contents($file_path);
 
     try {
-      $response = $client->post($config->get('asset_manager_url_port') . '/asset/' . $token . '/' . $filename, ['body' => $data]);
+      if (!empty($asset_receiver_token)) {
+        $params = [
+          'body' => $data,
+          'headers' => [
+            'Authorization' => 'Bearer ' . $asset_receiver_token,
+          ],
+        ];
+      }
+      else {
+        $params = [
+          'body' => $data,
+        ];
+      }
+      $response = $client->post($asset_receiver_url . '/asset/' . $token . '/' . $filename, $params);
       $fileid = $response->getBody();
     }
     catch (ConnectException $e) {
       $msg = $e->getMessage();
       if (strpos($msg, 'Failed to connect')) {
-        drupal_set_message('Unable to connect to ' . $config->get('asset_manager_url_port'). ' - please check server or setting', 'error');
+        drupal_set_message('Unable to connect to ' . $asset_receiver_url. ' - please check server or setting', 'error');
+        return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_assets')->toString());
+      }
+      else {
+        drupal_set_message($msg, 'error');
         return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_assets')->toString());
       }
     }

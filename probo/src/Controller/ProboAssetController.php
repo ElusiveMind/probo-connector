@@ -23,7 +23,7 @@ class ProboAssetController extends ControllerBase {
    * @return array
    *   Return a render array that is a table of assets.
    */
-  public function list_assets(): array {
+  public function list_assets() {
     $query = \Drupal::database()->select('probo_assets', 'pa');
     $query->fields('pa', ['aid', 'rid', 'filename']);
     $query->addField('pr', 'owner');
@@ -90,9 +90,13 @@ class ProboAssetController extends ControllerBase {
    * @return RedirectResponse
    *   Redirect to the list of assets.
    */
-  public function delete_asset($aid): RedirectResponse {
+  public function delete_asset($aid) {
     $client = \Drupal::httpClient();
     $config = $this->config('probo.probosettings');
+    $asset_receiver_url = $config->get('asset_receiver_url_port');
+    $asset_receiver_token = $config->get('asset_receiver_token');
+
+    $params = (!empty($asset_receiver_token)) ? ['headers' => ['Authorization' => 'Bearer ' . $asset_receiver_token]] : [];
 
     // Get the filename, owner/organization and repository for deleting the asset.
     $query = \Drupal::database()->select('probo_assets', 'pa');
@@ -107,13 +111,13 @@ class ProboAssetController extends ControllerBase {
     $assets = array_pop($assets);
 
     try {
-      $response = $client->request('DELETE', $config->get('asset_manager_url_port') . '/buckets/' . $assets->owner . '-' . $assets->repository . '/assets/ ' . $assets->filename);
+      $response = $client->request('DELETE', $asset_receiver_url . '/buckets/' . $assets->owner . '-' . $assets->repository . '/assets/ ' . $assets->filename, $params);
       $buffer = $response->getBody();
     }
     catch (ConnectException $e) {
       $msg = $e->getMessage();
       if (strpos($msg, 'Failed to connect')) {
-        drupal_set_message('Unable to connect to ' . $config->get('asset_manager_url_port'). ' - please check server or setting', 'error');
+        drupal_set_message('Unable to connect to ' . $config->get('asset_receiver_url_port'). ' - please check server or setting', 'error');
         return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_assets')->toString());
       }
     }
@@ -136,7 +140,7 @@ class ProboAssetController extends ControllerBase {
    * @return RedirectResponse
    *   Redirect to the URL on the asset manager to begin the download.
    */
-  public function download_asset($aid): TrustedRedirectResponse {
+  public function download_asset($aid) {
     $config = $this->config('probo.probosettings');
 
     // Get the filename, owner/organization and repository for deleting the asset.
@@ -152,7 +156,7 @@ class ProboAssetController extends ControllerBase {
     $assets = array_pop($assets);
 
     // Construct the URL and then redirect to it to begint the download.
-    $url = $config->get('asset_manager_url_port') . '/asset/' . $assets->owner . '-' . $assets->repository . '/' . $assets->filename;
+    $url = $config->get('asset_receiver_url_port') . '/asset/' . $assets->owner . '-' . $assets->repository . '/' . $assets->filename;
     return new TrustedRedirectResponse($url);
   }
 

@@ -36,7 +36,7 @@ class ProboSettingsForm extends ConfigFormBase {
       '#title' => 'General Probo Server Settings',
       '#weight' => 0,
     ];
-    $form['probo_asset_manager'] = [
+    $form['probo_asset_receiver'] = [
       '#type' => 'fieldset',
       '#title' => 'Asset Receiver Configuration',
       '#weight' => 1,
@@ -55,22 +55,22 @@ class ProboSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('probo_builds_domain'),
       '#weight' => 0,
     ];
-    $form['probo_asset_manager']['asset_manager_url_port'] = [
+    $form['probo_asset_receiver']['asset_receiver_url_port'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Asset Manager URL'),
-      '#description' => $this->t('The URL for the location of the asset manager - Include the port number and colon if needed.'),
+      '#title' => $this->t('Asset Receiver URL'),
+      '#description' => $this->t('The URL for the location of the asset receiver - Include the port number with colon.'),
       '#maxlength' => 64,
       '#size' => 64,
-      '#default_value' => $config->get('asset_manager_url_port'),
+      '#default_value' => $config->get('asset_receiver_url_port'),
       '#weight' => 0,
     ];
-    $form['probo_asset_manager']['asset_manager_upload_token'] = [
+    $form['probo_asset_receiver']['asset_receiver_token'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Upload Token'),
-      '#description' => $this->t('The upload token for your asset manager if required (STRONGLY RECOMMENDED).'),
+      '#title' => $this->t('Asset Receiver Token'),
+      '#description' => $this->t('The token for your asset receiver if required (STRONGLY RECOMMENDED).'),
       '#maxlength' => 64,
       '#size' => 64,
-      '#default_value' => $config->get('asset_manager_upload_token'),
+      '#default_value' => $config->get('asset_receiver_token'),
       '#weight' => 1,
     ];
     $form['probo_loom']['probo_loom_stream_url'] = [
@@ -110,10 +110,10 @@ class ProboSettingsForm extends ConfigFormBase {
       ->set('probo_builds_domain', $form_state->getValue('probo_builds_domain'))
       ->save();
     $this->config('probo.probosettings')
-      ->set('asset_manager_url_port', $form_state->getValue('asset_manager_url_port'))
+      ->set('asset_receiver_url_port', $form_state->getValue('asset_receiver_url_port'))
       ->save();
     $this->config('probo.probosettings')
-      ->set('asset_manager_upload_token', $form_state->getValue('asset_manager_upload_token'))
+      ->set('asset_receiver_token', $form_state->getValue('asset_receiver_token'))
       ->save();
     $this->config('probo.probosettings')
       ->set('probo_loom_stream_url', $form_state->getValue('probo_loom_stream_url'))

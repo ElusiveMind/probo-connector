@@ -14,7 +14,6 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  */
 class PropoRepositoryForm extends FormBase {
 
-
   /**
    * {@inheritdoc}
    */
@@ -70,29 +69,44 @@ class PropoRepositoryForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Get the values of the form and assign to an associative array.
     $values = $form_state->getValues();
-    $config = $this->config('probo.probosettings');
     $client = \Drupal::httpClient();
 
-    // Create the bucket for this owner/repo.
-    $data = [
-      'creator' => 'Probo Drupal Module',
-      'creation_date' => date('m/d/Y H:i:s')
-    ];
-    $json = json_encode($data);
+    $config = $this->config('probo.probosettings');
+    $asset_receiver_url = $config->get('asset_receiver_url_port');
+    $asset_receiver_token = $config->get('asset_receiver_token');
 
-    try {
-      $request = $client->post($config->get('asset_manager_url_port') . '/buckets/' . $values['repository_owner'] . '-' . $values['repository_name'], [
+    if (!empty($asset_receiver_token)) {
+      $params = [
+        'headers' => [
+          'Authorization' => 'Bearer ' . $asset_receiver_token,
+        ],
         'json' => [
           'creator' => 'Probo Drupal Module',
           'creation_date' => date('m/d/Y H:i:s')
-        ]
-      ]);
+        ],
+      ];
+    }
+    else {
+      $params = [
+        'json' => [
+          'creator' => 'Probo Drupal Module',
+          'creation_date' => date('m/d/Y H:i:s')
+        ],
+      ];
+    }
+
+    try {
+      $request = $client->post($asset_receiver_url . '/buckets/' . $values['repository_owner'] . '-' . $values['repository_name'], $params);
       $buffer = $request->getBody();
     }
     catch (ConnectException $e) {
       $msg = $e->getMessage();
       if (strpos($msg, 'Failed to connect')) {
-        drupal_set_message('Unable to connect to ' . $config->get('asset_manager_url_port'). ' - please check server or setting', 'error');
+        drupal_set_message('Unable to connect to ' . $asset_receiver_url . ' - please check server or setting', 'error');
+        return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());
+      }
+      else {
+        drupal_set_message($msg, 'error');
         return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());
       }
     }
@@ -106,18 +120,25 @@ class PropoRepositoryForm extends FormBase {
         $token = $values['token'];
       }
       else {
-        // If token left empty, create a random hash for our upload token.
+        // If no token provided by the user, create a random hash for our upload token.
         $token = md5(microtime() + rand(0,100000));
       }
 
       try {
         // Create the upload token on the server.
-        $request = $client->request('POST', $config->get('asset_manager_url_port') . '/buckets/' . $values['repository_owner'] . '-' . $values['repository_name'] . '/token/' . $token);
+        if (!empty($params['json'])) {
+          unset($params['json']);
+        }
+        $request = $client->request('POST', $asset_receiver_url . '/buckets/' . $values['repository_owner'] . '-' . $values['repository_name'] . '/token/' . $token, $params);
         $buffer = $request->getBody();
       }
       catch (ConnectException $e) {
         if (strpos($msg, 'Failed to connect')) {
-          drupal_set_message('Unable to connect to ' . $config->get('asset_manager_url_port'). ' - please check server or setting', 'error');
+          drupal_set_message('Unable to connect to ' . $asset_receiver_url . ' - please check server or setting', 'error');
+          return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());
+        }
+        else {
+          drupal_set_message($msg, 'error');
           return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());
         }
       }
