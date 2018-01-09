@@ -150,7 +150,7 @@ class ProboController extends ControllerBase {
       $task_time = microtime(TRUE);
       
       $stream_code = 'build-' . $build_id . '-task-' . $task_id;
-      $task_payload = get_loom_stream($build_id, $task_id, $stream_code);
+      $task_payload = $this->get_loom_stream($build_id, $task_id, $stream_code);
 
       // Store our build data in the build table.
       \Drupal::database()->merge('probo_builds')
