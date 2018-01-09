@@ -140,7 +140,7 @@ class ProboController extends ControllerBase {
       $service = $data->service;
       $pull_request_url = $data->pull_request_html_url;
       $pull_request_name = $data->pull_request_name;
-      $author_name = $data->build->author_name;
+      $author_name = $data->author_name;
       $task_id = $data->task_id;
       $task_name = $data->task_name;
       $task_plugin = $data->task_plugin;
