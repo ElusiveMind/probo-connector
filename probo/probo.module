@@ -34,6 +34,13 @@ function probo_theme($existing, $type, $theme, $path) {
         'service' => NULL, 'pull_request_url' => NULL],
       'template' => 'probo-task-details',
     ],
+    'probo_bitbucket_instructions' => [
+      'template' => 'probo-bitbucket-instructions'
+    ],
+    'pbbcg_get_client_information' => [
+      'variables' => ['client_key' => NULL, 'client_secret' => NULL, 'access_token' => NULL, 'refresh_token' => NULL],
+      'template' => 'probo-bitbucket-configuration-display',
+    ],
   ];
 }
 
@@ -44,9 +51,15 @@ function probo_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     // Main module help for the probo module.
     case 'help.page.probo':
+      $bitbucket_instructions = \Drupal::url('probo.pbbcg_instructions');
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Integrates with a Probo.CI open source server.') . '</p>';
+      $output .= '<p>' . t('This module integrates with the Probo Open Source server that can be installed via Docker or 
+          as a stand-alone service. You can get more information on this by visiting the Probo web site at <a href="https://probo.ci">https://probo.ci</a>.
+          For information on the Docker install you can visit the <a href="https://github.com/ElusiveMind/probo-docker">Github project</a>.
+          There you will find information for configuring the Probo Open Source Docker Server via <a href="https://github.com/ElusiveMind/probo-docker/wiki">wiki</a>.<br /><br />
+          Special instructions are required for configuring your server for BitBucket and the helper tool is now available via this
+          module. For information on configuring BitBucket for your server <a href=":pbbcg">click here</a>.',[':pbbcg' => $bitbucket_instructions]) . '</p>';
       return $output;
     default:
   }

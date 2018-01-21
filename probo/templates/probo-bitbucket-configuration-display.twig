@@ -1,0 +1,36 @@
+{# 
+/**
+ * @file
+ * The configuration display page for the Probo Bitbucket configuration page.
+ *
+ * Available variables:
+ *
+ * Page content (in order of occurrence in the default page.html.twig):
+ * - client_key: The client key for the application for Bitbucket.
+ * - client_secret: The client secret for the application for Bitbucket.
+ * - access_token: The generated access token from Bitbucket after authentication.
+ * - refresh_token: The generated refresh token from Bitbucket after authentication.
+ *
+ * @see template_preprocess_page()
+ * @see html.html.twig
+ */
+#}
+
+<p>Below are the configuration options for Bitbucket for use on your Probo Open Source server. There are configurations for both the docker-compose.yml file and the bitbucket-handler.yml file. Use the one that is most applicable to your server setup.</p>
+
+<h4>Bitbucket Handler For Open Source Server YAML: bitbucket-handler.yml</h4>
+<div class="probo-monospace">
+bbClientKey: '{{ client_key }}'<br />
+bbClientSecret: '{{ client_secret }}'<br />
+bbAccessToken: '{{ access_token }}'<br />
+bbRefreshToken: '{{ refresh_token }}'
+</div>
+
+<h4>Probo Open Source Server docker-compose.yml Configuration</h4>
+<div class="probo-monospace">
+BB_CLIENT_KEY: {{ client_key  }}<br />
+BB_CLIENT_SECRET: {{ client_secret }}<br />
+BB_ACCESS_TOKEN: {{ access_token }}<br />
+BB_REFRESH_TOKEN: {{ refersh_token }}
+</div>
+

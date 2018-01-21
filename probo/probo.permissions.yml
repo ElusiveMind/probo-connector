@@ -10,3 +10,4 @@ administer probo:
   title: 'Admister Probo Settings'
   description: 'Administer organization and repository settings.'
   restrict access: TRUE
+  

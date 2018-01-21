@@ -73,7 +73,8 @@ class ProboController extends ControllerBase {
       '#theme' => 'probo_build_details', 
       '#build' => $build_info,
       '#tasks' => $tasks,
-    ];  
+    ];
+    
   }
 
   /**
