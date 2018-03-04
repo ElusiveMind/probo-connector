@@ -129,7 +129,8 @@ class ProboController extends ControllerBase {
    * in our module directory.
    */
   public function service_endpoint( Request $request ) {
-  
+    $config = $this->config('probo.probosettings');
+    
     // Get the input from our posted data. If no data was posted, then we can
     // bail on the operation.
     $data = json_decode($request->getContent(), FALSE);
@@ -183,6 +184,68 @@ class ProboController extends ControllerBase {
         'method' => 'GET'
       ];
     }
+    
+    // Create the JSON feed for the API as part of our ReactJS interface
+    // Get the build data for the overall build before we get the task specific information for each task
+    // in the build.
+    $query = \Drupal::database()->select('probo_builds', 'db')
+      ->fields('pb', ['bid', 'owner', 'repository', 'service', 'pull_request_name', 'author_name', 'pull_request_url'])
+      ->orderBy('owner', 'ASC')
+      ->orderBy('repository', 'ASC');
+    $repositories = $query->execute()->fetchAllAssoc();
+
+    // Get the tasks and the status of each task.
+    $query = \Drupal::database()->select('probo_tasks', 'pt')
+      ->fields('pt', ['bid', 'tid', 'state', 'event_name', 'event_description', 'plugin', 'context', 'payload'])
+      ->orderBy('bid', 'ASC')
+      ->orderBy('tid', 'ASC');
+    $tasks = $query->execute()->fetchAllAssoc();
+
+    $repositoryName = $reporitory['owner'] . '-' . $repository['repository'];
+
+    $o = new stdClass();
+    $builds = [];
+    foreach($repositories as $key => $repository) {
+      if ($key == 0) {
+        $o->repositoryName = $repositoryName;
+      }
+      $build = new stdClass();
+      $build->pullRequestName = $repository['pull_request_name'];
+      $build->URL = 'http://' . $repository['bid'] . '.' . $config->get('probo_builds_domain');
+      $build->pull_request_url = $repository['pull_request_url'];
+
+      $steps = [];
+      $step = new stdClass();
+      foreach($tasks as $task) {
+        switch ($task['state']) {
+          case 1:
+            $statusIcon = "fa-check-circle";
+            $statusColor = "probo-text-green";
+            break;
+          case 2:
+            $statusIcon = "fa-minus-circle";
+            $statusColor = "";
+            break;
+          case 3:
+            $statusIcon = "fa-times-circle";
+            $statusColor = "probo-text-dark";
+            break;
+          default:
+            $statusIcon = "fa-minus-circle";
+            $statusColor = "";
+            break;
+        }
+        $step->statusIcon = $statusIcon;
+        $step->statusColor = $statusColor;
+        $steps[] = $step;
+      }
+      $build->steps = $steps; 
+      $builds[] = $build;
+    }
+    
+    // Create the json file.
+    $json = json_encode($builds);
+    file_put_contents($repositoryName . '.json', $json);
 
     return new JsonResponse($response);
   }
