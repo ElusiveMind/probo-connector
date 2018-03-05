@@ -245,8 +245,8 @@ class ProboController extends ControllerBase {
     
     // Create the json file.
     $json = json_encode($builds);
-    file_put_contents($repositoryName . '.json', $json);
-
+    $dir = \Drupal::service('file_system')->realpath(file_default_scheme() . "://");
+    file_put_contents($dir . $repositoryName . '.json', $json);
     return new JsonResponse($response);
   }
 
