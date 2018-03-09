@@ -6,6 +6,14 @@ probo.probo_controller_service_endpoint:
   methods: [POST]
   requirements:
     _permission: 'access content'
+probo.probo_controller_build_status:
+  path: 'probo-api/build-status.json'
+  defaults:
+    _controller: '\Drupal\probo\Controller\ProboController::build_status'
+    _title: 'Probo Build Status Endpoint'
+  methods: [GET]
+  requirements:
+    _permission: 'access content'
 probo.build_details:
   path: 'probo/build/{bid}'
   defaults:

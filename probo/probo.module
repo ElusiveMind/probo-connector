@@ -108,6 +108,10 @@ function probo_cron() {
     }
     
     // Proxy errors are grounds for deletion.
+    // This needs to be fleshed out to more gracefully handle errors
+    // as we need to be able to debug errors via the drupal module if they
+    // occur not instantly delete them so they cannot be debuged.
+    // Therefore we should likely only delete items that have been reaped.
     if (strpos($response, 'Proxy error:') || strpos($headers, '404')) {
       if (!strpos($response, 'Build is still in progress')) {
         $query = \Drupal::database()->delete('probo_builds');
@@ -119,26 +123,6 @@ function probo_cron() {
         $query->execute();
       }
     }
-
-    // For some reasons, our builds are going dormant when first created or after a period
-    // of time. In this we kickstart their hearts to make sure we don't get initial errors.
-    // Cap the number of times this will run at 10 to prevent invinite loop errors in the
-    // event there are site errors.
-    // Keep the build alive. Keep the build aliiiiiive.
-    $do_again = FALSE;
-    $output = [];
-    $loop = 0;
-    do {
-      $loop++;
-      exec('/usr/bin/wget -Sc ' . $url, $output);
-      if (isset($output) && is_array($output)) {
-        foreach ($output as $line) {
-          if (strpos($line, 'HTTP/1.1 500')) {
-            $do_again = TRUE;
-          }
-        }
-      }
-    } while ($do_again == TRUE && $loop < 10);
   }
   drupal_flush_all_caches();
 }

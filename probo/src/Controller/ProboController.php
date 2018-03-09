@@ -185,6 +185,45 @@ class ProboController extends ControllerBase {
       ];
     }
     
+    return new JsonResponse($response);
+  }
+
+  /**
+   * get_loom_stream()
+   * 
+   * @param string $build_id
+   *   The id of the build to get the details of the task
+   * @param string $task_id
+   *   The id of the task to get the details for.
+   * @param string $stream_code
+   *   The stream code stored in the loom made up of build and task id
+   * @return string
+   *   The data from probo-loom
+   */
+  private function get_loom_stream($build_id, $task_id, $stream_code) {
+    $config = $this->config('probo.probosettings');
+
+    $loom_stream_url = $config->get('probo_loom_stream_url') . '/stream/' . $stream_code;
+    $loom_stream_token = $config->get('probo_loom_stream_token');
+    $options = array(
+      'http' => array(
+        'header' => array(
+          'Authorization: Bearer ' . $loom_stream_token,
+        ),
+        'method' => 'GET'
+      )
+    );
+    $context = stream_context_create($options);
+    $result = file_get_contents($loom_stream_url, false, $context);
+    return $result;
+  }
+
+  /**
+   * build_status().
+   * A json feed that produces a json response of our build status for all builds in the system.
+   * This feed is for our front end Drupal module to update the user interface on build status.
+   */
+  public function buids_status() {
     // Create the JSON feed for the API as part of our ReactJS interface
     // Get the build data for the overall build before we get the task specific information for each task
     // in the build.
@@ -242,41 +281,10 @@ class ProboController extends ControllerBase {
       $build->steps = $steps; 
       $builds[] = $build;
     }
-    
-    // Create the json file.
-    $json = json_encode($builds);
-    $dir = \Drupal::service('file_system')->realpath(file_default_scheme() . "://");
-    file_put_contents($dir . $repositoryName . '.json', $json);
-    return new JsonResponse($response);
-  }
 
-  /**
-   * get_loom_stream()
-   * 
-   * @param string $build_id
-   *   The id of the build to get the details of the task
-   * @param string $task_id
-   *   The id of the task to get the details for.
-   * @param string $stream_code
-   *   The stream code stored in the loom made up of build and task id
-   * @return string
-   *   The data from probo-loom
-   */
-  private function get_loom_stream($build_id, $task_id, $stream_code) {
-    $config = $this->config('probo.probosettings');
+    return new JsonResponse($builds);
 
-    $loom_stream_url = $config->get('probo_loom_stream_url') . '/stream/' . $stream_code;
-    $loom_stream_token = $config->get('probo_loom_stream_token');
-    $options = array(
-      'http' => array(
-        'header' => array(
-          'Authorization: Bearer ' . $loom_stream_token,
-        ),
-        'method' => 'GET'
-      )
-    );
-    $context = stream_context_create($options);
-    $result = file_get_contents($loom_stream_url, false, $context);
-    return $result;
+    //$dir = \Drupal::service('file_system')->realpath(file_default_scheme() . "://");
+    //file_put_contents($dir . $repositoryName . '.json', $json);
   }
 }
