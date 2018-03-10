@@ -3,6 +3,16 @@
 use Drupal\Core\Database\Database;
 
 /**
+ * Implements hook_install().
+ */
+function probo_install() {
+  // We need to be able to upload insecure files and make this easy. So we just make
+  // it so right here.
+  $config = \Drupal::service('config.factory')->getEditable('system.file');
+  $config->set('allow_insecure_uploads', TRUE)->save();
+}
+
+/**
  * Implements hook_schema().
  */
 function probo_schema() {

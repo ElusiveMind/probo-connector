@@ -37,7 +37,7 @@ class PBBCGClientInformation extends FormBase {
     ];
     $form['client_secret'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Probo Builds Domain'),
+      '#title' => $this->t('Bitbucket Application Secret Key'),
       '#description' => $this->t('The client secret for the Bitbucket application you created for this site. Please see the instructions if you need more information.'),
       '#maxlength' => 255,
       '#size' => 64,

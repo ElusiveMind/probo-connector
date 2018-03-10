@@ -223,7 +223,7 @@ class ProboController extends ControllerBase {
    * A json feed that produces a json response of our build status for all builds in the system.
    * This feed is for our front end Drupal module to update the user interface on build status.
    */
-  public function buids_status() {
+  public function build_status() {
     // Create the JSON feed for the API as part of our ReactJS interface
     // Get the build data for the overall build before we get the task specific information for each task
     // in the build.
@@ -283,8 +283,5 @@ class ProboController extends ControllerBase {
     }
 
     return new JsonResponse($builds);
-
-    //$dir = \Drupal::service('file_system')->realpath(file_default_scheme() . "://");
-    //file_put_contents($dir . $repositoryName . '.json', $json);
   }
 }

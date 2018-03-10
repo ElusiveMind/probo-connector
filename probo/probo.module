@@ -37,7 +37,7 @@ function probo_theme($existing, $type, $theme, $path) {
     'probo_bitbucket_instructions' => [
       'template' => 'probo-bitbucket-instructions'
     ],
-    'pbbcg_get_client_information' => [
+    'probo_configuration_display' => [
       'variables' => ['client_key' => NULL, 'client_secret' => NULL, 'access_token' => NULL, 'refresh_token' => NULL],
       'template' => 'probo-bitbucket-configuration-display',
     ],

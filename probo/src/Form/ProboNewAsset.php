@@ -39,6 +39,11 @@ class ProboNewAsset extends FormBase {
       $options[$repository->rid . '-' . $repository->token] = $repository->owner . '-' . $repository->repository;
     }
 
+    // We need to be able to upload insecure files and make this easy. So we just make
+    // it so right here.
+    $config = \Drupal::service('config.factory')->getEditable('system.file');
+    $config->set('allow_insecure_uploads', TRUE)->save();
+
     $form['asset_file'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Asset File'),
