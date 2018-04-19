@@ -107,6 +107,13 @@ function probo_schema() {
         'not null' => TRUE,
         'default' => '',
       ],
+      'rid' => [
+        'description' => 'The id of the repository assigned by the probo module',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
       'service' => [
         'description' => 'The service for the repository.',
         'type' => 'varchar',
@@ -170,6 +177,13 @@ function probo_schema() {
         'length' => 36,
         'not null' => TRUE,
         'default' => '',
+      ],
+      'rid' => [
+        'description' => 'The id of the repository assigned by the probo module',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
       ],
       'tid' => [
         'description' => 'The individual task id for the current build',

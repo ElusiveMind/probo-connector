@@ -6,11 +6,19 @@ probo.probo_controller_service_endpoint:
   methods: [POST]
   requirements:
     _permission: 'access content'
-probo.probo_controller_build_status:
-  path: 'probo-api/build-status.json'
+probo.probo_controller_repository_status:
+  path: 'probo-api/repository-status/{repository_id}/}{token}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboController::build_status'
-    _title: 'Probo Build Status Endpoint'
+    _controller: '\Drupal\probo\Controller\ProboController::repository_status'
+    _title: 'Probo Repository Status Endpoint'
+  methods: [GET]
+  requirements:
+    _permission: 'access content'
+probo.probo_controller_repository_build-status:
+  path: 'probo-api/repository-build-status/{build_id}/{token}'
+  defaults:
+    _controller: '\Drupal\probo\Controller\ProboController::repository_build_status'
+    _title: 'Probo Repository Build Status Endpoint'
   methods: [GET]
   requirements:
     _permission: 'access content'
