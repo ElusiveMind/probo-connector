@@ -204,7 +204,7 @@ class ProboController extends ControllerBase {
 
   /**
    * get_repository_id()
-   * 
+   *
    * Get the repository ID based on the name.
    *
    *  @param string $owner
@@ -269,7 +269,7 @@ class ProboController extends ControllerBase {
    */
   public function repository_status($repository_id, $token) {
     $config = $this->config('probo.probosettings');
-    $config_token = $config->get{'probo_api_token'};
+    $config_token = $config->get('probo_api_token');
     $check = $this->check_tokens($token, $config_token);
     if ($check != TRUE) {
       return $check;
@@ -313,7 +313,7 @@ class ProboController extends ControllerBase {
    */
   public function repository_build_status($build_id, $token) {
     $config = $this->config('probo.probosettings');
-    $config_token = $config->get{'probo_api_token'};
+    $config_token = $config->get('probo_api_token');
     $check = $this->check_tokens($token, $config_token);
     if ($check != TRUE) {
       return $check;
