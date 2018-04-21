@@ -130,13 +130,22 @@ class ProboController extends ControllerBase {
    */
   public function service_endpoint( Request $request ) {
     $config = $this->config('probo.probosettings');
-    
+    $debug = ($config->get('probo_loom_stream_url')) ? $config->{'probo_loom_stream_url'} : FALSE;
+
+    if ($debug) {
+      \Drupal::logger('probo')->notice('Entered the service point method.');
+    }
+
     // Get the input from our posted data. If no data was posted, then we can
     // bail on the operation.
     $data = json_decode($request->getContent(), FALSE);
 
     if (!empty($data)) {
+      if ($debug) {
+        \Drupal::logger('probo')->notice('Parsing out the data from the json encoded string.');
+      }
       $build_id = $data->build_id;
+      $repository_id = $this->get_repository_id($data->owner, $data->repository);
       $repository = $data->repository;
       $owner = $data->owner;
       $service = $data->service;
@@ -150,23 +159,23 @@ class ProboController extends ControllerBase {
       $task_context = $data->task_context;
       $task_state = $data->task_state;
       $task_time = microtime(TRUE);
-      
+
       $stream_code = 'build-' . $build_id . '-task-' . $task_id;
       $task_payload = $this->get_loom_stream($build_id, $task_id, $stream_code);
 
       // Store our build data in the build table.
       \Drupal::database()->merge('probo_builds')
         ->key(['bid' => $build_id])
-        ->insertFields(['bid' => $build_id, 'owner' => $owner, 'repository' => $repository, 'service' => $service,
+        ->insertFields(['bid' => $build_id, 'rid' => $repository_id, 'owner' => $owner, 'repository' => $repository, 'service' => $service,
           'pull_request_name' => $pull_request_name, 'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
         ->updateFields(['owner' => $owner, 'repository' => $repository, 'service' => $service, 'pull_request_name' => $pull_request_name, 
          'author_name' => $author_name, 'pull_request_url' => $pull_request_url])
         ->execute();
-      
+
       // Store our individual task data in the task table.
       \Drupal::database()->merge('probo_tasks')
         ->key(['bid' => $build_id, 'tid' => $task_id])
-        ->insertFields(['bid' => $build_id, 'tid' => $task_id, 'timestamp' => (string) $task_time, 'state' => $task_state,
+        ->insertFields(['bid' => $build_id, 'rid' => $repository_id, 'tid' => $task_id, 'timestamp' => (string) $task_time, 'state' => $task_state,
           'event_name' => $task_name, 'event_description' => $task_description, 'plugin' => $task_plugin, 'context' => $task_context,
           'payload' => $task_payload])
         ->updateFields(['timestamp' => (string) $task_time, 'state' => $task_state, 'event_name' => $task_name, 
@@ -177,15 +186,44 @@ class ProboController extends ControllerBase {
         'data' => 'Success',
         'method' => 'GET'
       ];
+      if ($debug) {
+        \Drupal::logger('probo')->notice('The service_endpoint operation was a success.');
+      }
     }
     else {
       $response = [
         'data' => 'Failure',
         'method' => 'GET'
       ];
+      if ($debug) {
+        \Drupal::logger('probo')->notice('The service_endpoint operation was a failure.');
+      }
     }
-    
     return new JsonResponse($response);
+  }
+
+  /**
+   * get_repository_id()
+   * 
+   * Get the repository ID based on the name.
+   *
+   *  @param string $owner
+   *    The string containing the owner of the repository. This is the machine name.
+   *
+   *  @param string $repository
+   *    The repository we want to get the id for.
+   *
+   *  @return int $rid
+   *    The repository id of the queried repository.
+   */
+  private function get_repository_id($owner, $repository) {
+    $query = \Drupal::database()->select('probo_repositories', 'pr')
+      ->fields('pr', ['rid'])
+      ->condition('owner', $owner, '=')
+      ->condition('repository', $repository, '=')
+      ->execute();
+      $result = $query->fetchObject();
+      return $result->rid;
   }
 
   /**

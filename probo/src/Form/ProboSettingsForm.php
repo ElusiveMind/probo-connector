@@ -91,6 +91,13 @@ class ProboSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('probo_loom_stream_token'),
       '#weight' => 1,
     ];
+    $form['probo_module_debug_mode'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Module Debug Mode'),
+      '#description' => $this->t('Placing the module in debug mode will place a lot of information in your logged messages. Not recommended for production.'),
+      '#default_value' => $config->get('probo_module_debug_mode'),
+      '#weight' => 3,
+    ];
     return parent::buildForm($form, $form_state);
   }
 
@@ -120,6 +127,9 @@ class ProboSettingsForm extends ConfigFormBase {
       ->save();
     $this->config('probo.probosettings')
       ->set('probo_loom_stream_token', $form_state->getValue('probo_loom_stream_token'))
+      ->save();
+    $this->config('probo.probosettings')
+      ->set('probo_module_debug_mode', $form_state->getValue('probo_module_debug_mode'))
       ->save();
   }
 }

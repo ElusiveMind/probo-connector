@@ -13,6 +13,16 @@ function probo_install() {
 }
 
 /**
+ * Implements hook_uninstall().
+ */
+function probo_uninstall() {
+  // We need to be able to upload insecure files and make this easy. So we just make
+  // it so right here.
+  $config = \Drupal::service('config.factory')->getEditable('system.file');
+  $config->set('allow_insecure_uploads', FALSE)->save();
+}
+
+/**
  * Implements hook_schema().
  */
 function probo_schema() {
