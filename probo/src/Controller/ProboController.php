@@ -1,7 +1,7 @@
 <?php
 
 namespace Drupal\probo\Controller;
-
+header('Access-Control-Allow-Origin: *');
 use Drupal\Core\Url;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Controller\ControllerBase;
@@ -271,89 +271,123 @@ class ProboController extends ControllerBase {
     $config = $this->config('probo.probosettings');
     $config_token = $config->get('probo_api_token');
     $check = $this->check_tokens($token, $config_token);
-    if ($check != TRUE) {
+    if ($check !== TRUE) {
       return $check;
     }
-
     // Create the JSON feed for the API as part of our ReactJS interface
     // Get the build data for the overall build before we get the task specific information for each task
     // in the build.
-    $query = \Drupal::database()->select('probo_builds', 'db')
-      ->fields('pb', ['bid', 'owner', 'repository', 'service', 'pull_request_name', 'author_name', 'pull_request_url'])
+    $query = \Drupal::database()->select('probo_builds', 'pb')
+      ->fields('pb', ['id', 'rid', 'bid', 'owner', 'repository', 'service', 'pull_request_name', 'author_name', 'pull_request_url'])
       ->condition('rid', $repository_id, '=')
-      ->orderBy('owner', 'ASC')
-      ->orderBy('repository', 'ASC');
-    $repositories = $query->execute()->fetchAllAssoc();
-
-    $builds = [];
-    $builds['build'] = [];
-    foreach($repositories as $key => $repository) {
+      ->orderBy('bid', 'ASC')
+      ->execute();
+    $builds = $all = [];
+    $builds['builds'] = [];
+    while ($repository = $query->fetchObject()) {
       $build = [];
-      $repository_name = $reporitory['owner'] . '-' . $repository['repository'];
-      $build['buildID'] = $repository['bid'];
-      $build['pullRequestName'] = $repository['pull_request_name'];
-      $build['URL'] = 'http://' . $repository['bid'] . '.' . $config->get('probo_builds_domain');
-      $build['pullRequestURL'] = $repository['pull_request_url'];
-      $builds['build'] = $build;
+      $build['repositoryName'] = $repository->owner . ' - ' . $repository->repository;
+      $build['rid'] = $repository->rid;
+      $build['buildID'] = $repository->bid;
+      $build['pullRequestName'] = $repository->pull_request_name . '-' . $repository->author_name;
+      $build['URL'] = 'http://' . $repository->bid . '.' . $config->get('probo_builds_domain');
+      $build['pullRequestURL'] = $repository->pull_request_url;
+      
+      $query2 = \Drupal::database()->select('probo_tasks', 'pt')
+        ->fields('pt', ['bid', 'rid', 'tid', 'state', 'event_name', 'event_description', 'plugin', 'context', 'payload'])
+        ->condition('bid', $repository->bid, '=')
+        ->orderBy('bid', 'ASC')
+        ->orderBy('tid', 'ASC')
+        ->execute();
+
+      $previous_build = $key = 0;
+      while($tasks = $query2->fetchObject()) {
+        switch ($tasks->state) {
+
+          case 'success':
+            $statusIcon = "fa-check-circle";
+            $statusColor = "probo-text-green";
+            $statusTask = $tasks->tid;
+            break;
+          case 'inprogress':
+            $statusIcon = "fa-minus-circle";
+            $statusColor = "";
+            break;
+          case 'failure':
+            $statusIcon = "fa-times-circle";
+            $statusColor = "probo-text-dark";
+            break;
+          default:
+            $statusIcon = "fa-minus-circle";
+            $statusColor = "probo-text-dark";
+            break;
+        }
+        $build['steps'][]  = [
+          'statusIcon' => $statusIcon,
+          'statusColor' => $statusColor,
+          'statusTask' => $statusTask,
+        ];
+      }
+      $all[] = $build;
     }
-    $builds['repositoryName'] = $repository_name;
-    return new JsonResponse($builds);
+    return new JsonResponse($all);
   }
 
- /**
-   * repository_build_status($build_id, $token).
-   * A json feed to provide the status of each step in the build process.
+
+  /**
+   * repository_status($repository_id, $token).
+   * A json feed to provide a list of builds within a repository.
    *
-   * @param string $build_id
-   *   The id of the build to get the details of the build.
+   * @param string $repository_id
+   *   The id of the repository to get the details of the repository.
    * @param string $token
    *   The API token submitted with the request.
    * @return string $json
-   *   The json version of the builds steps array for the requesting app.
+   *   The json version of the builds array for the requesting app.
    */
-  public function repository_build_status($build_id, $token) {
+  public function specific_build_status($build_id, $token) {
     $config = $this->config('probo.probosettings');
     $config_token = $config->get('probo_api_token');
     $check = $this->check_tokens($token, $config_token);
-    if ($check != TRUE) {
+    if ($check !== TRUE) {
       return $check;
     }
 
     $query = \Drupal::database()->select('probo_tasks', 'pt')
       ->fields('pt', ['bid', 'rid', 'tid', 'state', 'event_name', 'event_description', 'plugin', 'context', 'payload'])
-      ->condition('rid', $repository_id, '=')
+      ->condition('bid', $build_id, '=')
       ->orderBy('bid', 'ASC')
-      ->orderBy('tid', 'ASC');
-    $tasks = $query->execute()->fetchAllAssoc();
+      ->orderBy('tid', 'ASC')
+      ->execute();
 
-    $steps = $step = [];
-    $steps['builds']['buildID'] = $task['bid'];
-    $steps['builds']['steps'] = [];
-    foreach($tasks as $task) {
-      switch ($task['state']) {
-        case 1:
+    $build = [];
+    while($tasks = $query->fetchObject()) {
+      switch ($tasks->state) {
+        case 'success':
           $statusIcon = "fa-check-circle";
           $statusColor = "probo-text-green";
+          $statusTask = $tasks->tid;
           break;
-        case 2:
+        case 'inprogress':
           $statusIcon = "fa-minus-circle";
           $statusColor = "";
           break;
-        case 3:
+        case 'failure':
           $statusIcon = "fa-times-circle";
           $statusColor = "probo-text-dark";
           break;
         default:
           $statusIcon = "fa-minus-circle";
-          $statusColor = "";
+          $statusColor = "probo-text-dark";
           break;
       }
-      $steps['build']['steps'][]  = [
+      $build['steps'][]  = [
         'statusIcon' => $statusIcon,
         'statusColor' => $statusColor,
+        'statusTask' => $statusTask,
       ];
     }
-    return new JsonResponse($steps);
+    return new JsonResponse($build);
   }
 
   /**
@@ -367,20 +401,20 @@ class ProboController extends ControllerBase {
     * @return string/bool
     *   Returns FALSE if not successful, otherwise a json response.
     */
-  private function check_token($token, $config_token) {
+  private function check_tokens($token, $config_token) {
     if (empty($config_token) || $config_token == '') {
       $error = [
         'errorCode' => 403,
         'error' => 'Your have not assigned a token for API requests. Please assign a token and send it in your request.',
       ];
-      return new JsonResponse($error);
+      return $error;
     }
     if (empty($token) || $token != $config_token) {
       $error = [
         'errorCode' => 404,
         'error' => 'You have not supplied a valid token with your request. Please assign your token to your request and try again.',
       ];
-      return new JsonResponse($error);
+      return $error;
     }
     return TRUE;
   }
