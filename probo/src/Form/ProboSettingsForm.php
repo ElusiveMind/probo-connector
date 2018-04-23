@@ -91,6 +91,18 @@ class ProboSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('probo_loom_stream_token'),
       '#weight' => 1,
     ];
+    $form['probo_expire_option'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Handling Expired Links'),
+      '#description' => $this->t('How to handle links to builds and build details that have been merged or deleted'),
+      '#options' => [
+        'delete' => $this->t('Delete'),
+        'de-activate' => $this->t('De-Activate / Archive'),
+      ],
+      '#default_value' => $config->get('probo_expire_option'),
+      '#required' => TRUE,
+      '#weight' => 3,
+    ];
     $form['probo_api_token'] = [
       '#type' => 'textfield',
       '#title' => $this->t('API Token'),
@@ -98,14 +110,14 @@ class ProboSettingsForm extends ConfigFormBase {
       '#maxlength' => 32,
       '#size' => 32,
       '#default_value' => $config->get('probo_api_token'),
-      '#weight' => 3,
+      '#weight' => 4,
     ];
     $form['probo_module_debug_mode'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Module Debug Mode'),
       '#description' => $this->t('Placing the module in debug mode will place a lot of information in your logged messages. Not recommended for production.'),
       '#default_value' => $config->get('probo_module_debug_mode'),
-      '#weight' => 4,
+      '#weight' => 5,
     ];
     return parent::buildForm($form, $form_state);
   }
@@ -143,5 +155,8 @@ class ProboSettingsForm extends ConfigFormBase {
     $this->config('probo.probosettings')
       ->set('probo_api_token', $form_state->getValue('probo_api_token'))
       ->save();
-  }
+    $this->config('probo.probosettings')
+      ->set('probo_expire_option', $form_state->getValue('probo_expire_option'))
+      ->save(); 
+   }
 }

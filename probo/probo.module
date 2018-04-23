@@ -73,6 +73,7 @@ function probo_cron() {
   // then we cannot run cron.
   $config = \Drupal::configFactory()->getEditable('probo.probosettings');
   $domain = $config->get('probo_builds_domain');
+  $expired_option = $config->get('probo_expired_option');
   if (empty($domain)) {
     return;
   }
@@ -94,22 +95,29 @@ function probo_cron() {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     $response = curl_exec($ch);
     $headers = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
     curl_close($ch);
 
     if (strpos($response, 'Build has been reaped')) {
-      $query = \Drupal::database()->update('probo_builds')
-        ->condition('bid', $build_id)
-        ->fields([
-          'active' => 0
-        ])
-        ->execute();
+      if ($expired_option == 'de-activate') {
+        $query = \Drupal::database()->update('probo_builds')
+          ->condition('bid', $build_id)
+          ->fields(['active' => 0])
+          ->execute();
+      }
+      else {
+        $query = \Drupal::database()->delete('probo_builds')
+          ->condition('bid', $build_id)
+          ->execute();
+        $query = \Drupal::database()->update('probo_tasks')
+          ->condition('bid', $build_id)
+          ->execute();
+      }
       continue;
     }
     
     // Proxy errors are grounds for deletion.
     // This needs to be fleshed out to more gracefully handle errors
-    // as we need to be able to debug errors via the drupal module if they
+    // as we need to be able to debug errors via the Drupal module if they
     // occur not instantly delete them so they cannot be debuged.
     // Therefore we should likely only delete items that have been reaped.
     if (strpos($response, 'Proxy error:') || strpos($headers, '404')) {
