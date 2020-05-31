@@ -255,13 +255,15 @@ class ProboBitbucketController extends ControllerBase {
     $token = $bitbucket_service->access_token;
 
     $bitbucket = new Client();
-    $bitbucket->authenticate(Client::AUTH_OAUTH_TOKEN, $bitbucket_service->access_token);
     try {
+      $bitbucket->authenticate(Client::AUTH_OAUTH_TOKEN, $bitbucket_service->access_token);
       $bitbucket->currentUser()->listTeams(['role' => 'admin']);
     }
     catch (ClientErrorException $e) {
       $message = $e->getMessage();
-      if ($message == 'Access token expired. Use your refresh token to obtain a new access token.') {
+      $status = $e->getStatus();
+
+      if ($status == 401) {
         $auth = $provider->getAccessToken('refresh_token', ['refresh_token' => $bitbucket_service->refresh_token]);
         $token = $auth->getToken();
         $refresh_token = $auth->getRefreshToken();
