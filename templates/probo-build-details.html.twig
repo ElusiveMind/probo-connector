@@ -1,0 +1,23 @@
+        <span class="h5">{{ build.pull_request_name }} - {{ build.author_name }}</span><br />
+        <p class="build-information">
+          <div class="right inline">
+            <button class="button button--success button-sm" onclick="window.location.href='{{ build.build_url }}'" />View Build</button>
+          </div>
+          <span class="small-text-link">
+            <strong>Build URL:</strong> <a class="small-text-link" href="{{ build.build_url }}" target="_blank">{{ build.build_url }}</a><br />
+            <strong>Pull Request:</strong> <a class="small-text-link" href="{{ build.pull_request_url }}" target="_blank">{{ build.pull_request_url }}</a></span>
+          </span>
+        </p>
+        {% for item in tasks %}
+        <table class="table details">
+          <tr class="accordion">
+            <td class="probo-purple-dark probo-text-soft-peach full-width"><strong>{{ item.event_name }}</strong></td>
+            <td class="probo-purple-dark right-text"><i class="{{ item.status_icon }} probo-text-soft-peach" aria-hidden="true"></i></td>
+          </tr>
+          <tr>
+            <td class="probo-build-details" colspan="2">
+              <pre>{{ item.details }}</pre>
+            </td>
+          </tr>
+        </table>
+        {% endfor %}

@@ -1,0 +1,8 @@
+global-styling:
+  css:
+    base:
+      css/style.css: {}
+  js:
+    js/probo.js: {}
+  dependencies:
+    - core/jquery

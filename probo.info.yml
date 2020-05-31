@@ -1,0 +1,9 @@
+name: Probo
+type: module
+description: Integrates with a Probo.CI open source server.
+package: ProboCI
+
+core_version_requirement: ^8.8.0 || ^9.0
+
+libraries:
+  - proboci/global-styling

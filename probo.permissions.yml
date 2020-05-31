@@ -1,0 +1,12 @@
+administer probo:
+  title: 'Admister Probo Settings'
+  description: 'Administer organization and repository settings.'
+  restrict access: TRUE
+access probo repositories:
+  title: 'Access Probo Repositories'
+  description: 'Allow a user to see the repositories associated with your ProboCI server.'
+  restrict access: TRUE
+access probo assets:
+  title: 'Access Probo Repository Assets'
+  description: 'Allow a user to administer the assets associated with a ProboCI repository.'
+  restrict access: TRUE

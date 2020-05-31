@@ -1,0 +1,130 @@
+.bitbucket-logo-image {
+  max-height: 32px;
+}
+
+.github-logo-image,
+.gitlab-logo-image {
+  max-height: 32px;
+  margin-top: 32px;
+}
+
+.no-service-contents {
+  padding: 72px 0px;
+  text-align: center;
+}
+
+.action-navigation {
+  white-space: nowrap;
+  text-align: center;
+}
+
+.repo-nowrap {
+  white-space: nowrap;
+}
+
+/* Repository Selection Screen Styles */
+/* Style the tab */
+.probo-repositories-tabs {
+  float: left;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+  width: 30%;
+  height: 300px;
+}
+
+/* Style the buttons inside the tab */
+.probo-repositories-tabs button {
+  display: block;
+  background-color: inherit;
+  color: black;
+  padding: 22px 16px;
+  width: 100%;
+  border: none;
+  outline: none;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 17px;
+  text-transform: uppercase;
+}
+
+/* Change background color of buttons on hover */
+.probo-repositories-tabs button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current "tab button" class */
+.probo-repositories-tabs button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  float: left;
+  border: 1px solid #ccc;
+  width: 66%;
+  min-width: 300px;
+  border-left: none;
+  min-height: 300px;
+  text-transform: uppercase;
+}
+
+.probo-repository-selected {
+  background-color: #4040FF;
+  color: #FFFFFF;
+}
+
+
+
+.probo-repository-selected a {
+  background-color: #4040FF;
+  color: #FFFFFF;
+}
+
+.probo-repository-block-checkmark {
+  display: none;
+}
+
+.probo-repository-block {
+  padding: 10px; 
+  margin: 10px;
+  border: 1px solid #000;
+  font-size: 10pt;
+  width: 44%;
+  min-width: 300px;
+  min-height: 100px;
+  float: left;
+}
+
+.probo-repository-block a {
+  color: #4040FF;
+}
+
+.probo-repository-block-label {
+  width: 100%;
+  min-height: 100px;
+  display: block;
+}
+
+b.probo-team-title {
+  font-size: 1.5em;
+  font-weight: 800;
+}
+
+button.probo-enable-repository,
+button.probo-visit-repository {
+  background-color: #4040FF;
+  color: #FFFFFF;
+  padding: 5px 10px;
+  text-transform: uppercase;
+  float: right;
+}
+
+button.probo-enable-repository.active,
+button.probo-visit-repository.active {
+  background-color: #FFFFFF;
+  color: #4040FF;
+  padding: 5px 10px;
+  text-transform: uppercase;
+  float: right;
+}

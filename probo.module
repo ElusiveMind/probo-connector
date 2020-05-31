@@ -1,0 +1,375 @@
+<?php
+
+/**
+ * @file
+ * Contains probo.module.
+ */
+
+use Drupal\Core\Url;
+use Drupal\Core\Link;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\probo\Controller\ProboController;
+use Drupal\probo\Controller\ProboAssetReceiverAPI;
+use Drupal\user\UserInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+
+define('BITBUCKET_CLIENT_ID', 'vtfQkaWRucAuRqMCEm');
+define('BITBUCKET_CLIENT_SECRET', 'zs5huNw3Z2sK22Y6dVfVX5hma2Bvfgh5');
+
+/**
+ * probo_gatekeeper().
+ * Function to make sure all of the requirements in configurations are met before
+ * doing any Probo server related functions. Basically a configuration test.
+ */
+function probo_gatekeeper() {
+  $pass = TRUE;
+
+  // Check to be sure we can access the asset receiver and that we have a token.
+  $ar = new ProboAssetReceiverAPI;
+  $config = \Drupal::configFactory()->getEditable('probo.asset_receiver');
+  $url = $config->get('url');
+  $token = $config->get('token');
+  if (!empty($url) && !empty($token)) {
+    $code = $ar->assetReceiverRequestCode('GET', $url, $ar->getBearerToken());
+    if ($code != 200) {
+      \Drupal::messenger()->addError(t('Unable to connect to asset receiver. Double check the asset receiver settings.'));
+      $pass = FALSE;
+    }
+  }
+  if (empty($url)) {
+    \Drupal::messenger()->addError(t('Asset receiver URL not configured. Double check the asset receiver settings.'));
+    $pass = FALSE;
+  }
+  if (empty($token)) {
+    \Drupal::messenger()->addError(t('Asset receiver token not configured. Double check the asset receiver settings.'));
+    $pass = FALSE;
+  }
+
+  return $pass;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view() for user entities.
+ */
+function probo_user_view(array &$build, UserInterface $account, EntityViewDisplayInterface $display) {  
+  $build['bitbucket_option'] = [
+    '#type' => 'item',
+    '#markup' => 'Bitbucket Options',
+    '#weight' => 6,
+  ];
+  $build['github_option'] = [
+    '#type' => 'item',
+    '#markup' => 'GitHub Options',
+    '#weight' => 7,
+  ];
+  $build['gitlab_option'] = [
+    '#type' => 'item',
+    '#markup' => 'Gitlab Options', 
+    '#weight' => 8,
+  ];
+}
+
+/**
+ * Implements hook_theme().
+ */
+function probo_theme($existing, $type, $theme, $path) {
+  return [
+    'probo_active_build_block' => [
+      'variables' => [
+        'title_label' => NULL, 'title_tag' => NULL, 'title_text_class' => NULL, 
+        'title_anchor_class' => NULL, 'title_links_to' => NULL,
+        'repository_label' => NULL, 'repository_tag' => NULL,
+        'repository' => NULL, 'repository_class' => NULL, 'repository_anchor' => NULL,
+        'pull_request_label' => NULL, 'pull_request_tag' => NULL,
+        'pull_request' => NULL, 'pull_request_class' => NULL, 'pull_request_anchor' => NULL,
+        'probo_label' => NULL, 'probo_tag' => NULL,
+        'probo_class' => NULL, 'probo_anchor' => NULL, 'builds' => [], 'probo_builds_domain' => NULL],
+      'template' => 'probo-active-build-block',
+    ],
+    'probo_build_details' => [
+      'variables' => ['build_id' => NULL, 'build' => [], 'tasks' => []],
+      'template' => 'probo-build-details',
+    ],
+    'probo_bitbucket_instructions' => [
+      'template' => 'probo-bitbucket-instructions'
+    ],
+    'probo_configuration_display' => [
+      'variables' => ['client_key' => NULL, 'client_secret' => NULL, 'access_token' => NULL, 'refresh_token' => NULL],
+      'template' => 'probo-bitbucket-configuration-display',
+    ],
+    'probo_build_error' => [
+      'variables' => ['error_code' => NULL, 'build_id' => NULL, 'reason' => NULL, 'images' => NULL, 'protocol' => NULL,
+        'build_domain' => NULL],
+      'template' => 'probo-build-error',
+    ],
+    'probo_reactjs' => [
+      'variables' => ['url' => NULL, 'rid' => NULL, 'asset_table' => NULL],
+      'template' => 'probo-reactjs',
+    ],
+    'probo_select_repositories' => [
+      'variables' => [
+        'teams' => [],
+      ],
+      'template' => 'probo-select-repositories',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_help().
+ */
+function probo_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the probo module.
+    case 'help.page.probo':
+      $bitbucket_instructions = \Drupal::url('probo.pbbcg_instructions');
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('This module integrates with the Probo Open Source server that can be installed via Docker or 
+          as a stand-alone service. You can get more information on this by visiting the Probo web site at <a href="https://probo.ci">https://probo.ci</a>.
+          For information on the Docker install you can visit the <a href="https://github.com/ElusiveMind/probo-docker">Github project</a>.
+          There you will find information for configuring the Probo Open Source Docker Server via <a href="https://github.com/ElusiveMind/probo-docker/wiki">wiki</a>.<br /><br />
+          Special instructions are required for configuring your server for BitBucket and the helper tool is now available via this
+          module. For information on configuring BitBucket for your server <a href=":pbbcg">click here</a>.',[':pbbcg' => $bitbucket_instructions]) . '</p>';
+      return $output;
+    default:
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function probo_cron() {
+  // Load our configuration variables for this module. If no domain is configured,
+  // then we cannot run cron.
+  $config = \Drupal::configFactory()->getEditable('probo.probosettings');
+  $domain = $config->get('probo_builds_domain');
+  $protocol = $config->get('probo_builds_protocol');
+  $build_base_url = $config->get('base_url');
+  if (empty($domain)) {
+    return;
+  }
+
+  // Check for reaped builds. If we have them, then mark them as inactive.
+  $query = \Drupal::database()->select('probo_builds', 'pb')
+    ->fields('pb', ['bid', 'build_size'])
+    ->distinct();
+  $build_objects = $query->execute()->fetchAllAssoc('bid');
+    
+  // Assemble the build id's into an array to be iterated through in the template.
+  foreach ($build_objects as $build_object) {
+    $build_id = $build_object->bid;
+
+    $url = $protocol . '://' . $build_id . '.' . $domain;
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HEADER, 1);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    $response = curl_exec($ch);
+    $headers = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    // See if there is a container with this id. If there is none (running or not) then get rid of it */
+    $output = [];
+    $container_name = \Drupal\probo\Controller\ProboController::get_container_name($build_id);
+    exec('docker ps -a -s -f name=' . $container_name, $output);
+    if (count($output) == 1) {
+      $query = \Drupal::database()->delete('probo_builds')
+        ->condition('bid', $build_id)
+        ->execute();
+      $query = \Drupal::database()->delete('probo_tasks')
+        ->condition('bid', $build_id)
+        ->execute();
+      remove_from_jira($build_id);
+      continue;
+    }
+
+    // If we do not have the size of the active build, then get it here. Build sizes
+    // do not change to any significant fashion.
+    if ($build_object->build_size == 0) {
+      $url = $build_base_url .  '/probo/size/' . $build_id;
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+      $size = curl_exec($ch);
+      curl_close($ch);
+
+      if (!empty($size)) {
+        $query = \Drupal::database()->update('probo_builds')
+          ->condition('bid', $build_id)
+          ->fields(['build_size' => $size])
+          ->execute();
+      }
+    }
+  }
+  \Drupal::cache('render')->deleteAll();
+}
+
+/**
+ * Implements hook_page_bottom().
+ */
+function probo_page_bottom(&$page_bottom) {
+  // We only want this added on our builds page
+  if (\Drupal::routeMatch()->getRouteName() == 'probo.repository_builds') {
+    $module_handler = \Drupal::service('theme_handler');
+    $path = $module_handler->getTheme('proboci')->getPath();
+    $document_root = $_SERVER['DOCUMENT_ROOT'];
+    $script_path = '/' . str_replace($document_root, '', $path) . '/build/static/js/probo.js';
+
+    $page_top['proboci_scripts_2'] = [
+      '#type'  => 'html_tag',
+      '#tag'   => 'script',
+      '#attributes' => [
+        'type' => 'text/javascript',
+        'src' => 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js',
+      ],
+    ];
+    $page_bottom['proboci_scripts_3'] = [
+      '#type'  => 'html_tag',
+      '#tag'   => 'script',
+      '#attributes' => [
+        'type' => 'text/javascript',
+        'src' => $script_path,
+      ],
+    ];
+  }
+}
+
+/**
+ * Implements hook_page_top().
+ */
+function probo_page_top(&$page_top) {
+  $page_top['proboci_scripts_1'] = [
+    '#type'  => 'html_tag',
+    '#tag'   => 'link',
+    '#attributes' => [
+      'rel' => 'stylesheet',
+      'href' => 'https://use.fontawesome.com/releases/v5.4.2/css/all.css',
+      'integrity' => 'sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns',
+      'crossorigin' => 'anonymous',
+    ],
+  ];
+}
+
+/**
+ * remove_from_jira().
+ * Remove comments from JIRA when builds are dismantled.
+ * 
+ * @param string build_id
+ *   The build id as assigned by Probo. Could be multiple messages for a single build theoretically.
+ */
+function remove_from_jira($build_id) {
+  $config = \Drupal::configFactory()->getEditable('probo.probosettings');
+  $jira_url = $config->get('jira_url');
+  $jira_api_username = $config->get('jira_api_username');
+  $jira_api_token = $config->get('jira_api_token');
+
+  // If JIRA isn't configured, then just go back.
+  if (empty($jira_api_username) || empty($jira_api_token)) {
+    return FALSE;
+  }
+
+  // Check for reaped builds. If we have them, then mark them as inactive.
+  $query = \Drupal::database()->select('probo_jira_comments', 'jc')
+    ->fields('jc', ['issue_id', 'comment_id'])
+    ->condition('bid', $build_id)
+    ->distinct();
+  $comments = $query->execute()->fetchAllAssoc('bid');
+    
+  // Assemble the build id's into an array to be iterated through in the template.
+  foreach ($comments as $jira) {
+    $url = $jira_url . '/rest/api/2/issue/' . $jira->issue_id . '/comment' . '/' . $jira->comment_id;
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(                                                                          
+      'Content-Type: application/json',
+      'Authorization: Basic ' . base64_encode($jira_api_username.':'.$jira_api_token),
+      'Content-Length: ' . strlen(json_encode($message))
+    ));
+    curl_setopt($ch, CURLOPT_USERPWD, "$jira_api_username:$jira_api_token");
+    $response = curl_exec($ch);
+    \Drupal::logger('probo')->notice($response);
+    curl_close($ch);
+  }
+}
+
+/**
+ * probo_get_http_error().
+ * Get a plain language error description for returned error codes.
+ * 
+ * @param string $code
+ *   The HTTP code to be looked up.
+ * @return string $code_string
+ *   A constructed string of the error code and the error code description.
+ */
+function probo_get_http_error(string $code) : string {
+  $http_codes = [
+    100 => 'Continue',
+    101 => 'Switching Protocols',
+    102 => 'Processing',
+    103 => 'Checkpoint',
+    200 => 'OK',
+    201 => 'Created',
+    202 => 'Accepted',
+    203 => 'Non-Authoritative Information',
+    204 => 'No Content',
+    205 => 'Reset Content',
+    206 => 'Partial Content',
+    207 => 'Multi-Status',
+    300 => 'Multiple Choices',
+    301 => 'Moved Permanently',
+    302 => 'Found',
+    303 => 'See Other',
+    304 => 'Not Modified',
+    305 => 'Use Proxy',
+    306 => 'Switch Proxy',
+    307 => 'Temporary Redirect',
+    400 => 'Bad Request',
+    401 => 'Unauthorized',
+    402 => 'Payment Required',
+    403 => 'Forbidden',
+    404 => 'Not Found',
+    405 => 'Method Not Allowed',
+    406 => 'Not Acceptable',
+    407 => 'Proxy Authentication Required',
+    408 => 'Request Timeout',
+    409 => 'Conflict',
+    410 => 'Gone',
+    411 => 'Length Required',
+    412 => 'Precondition Failed',
+    413 => 'Request Entity Too Large',
+    414 => 'Request-URI Too Long',
+    415 => 'Unsupported Media Type',
+    416 => 'Requested Range Not Satisfiable',
+    417 => 'Expectation Failed',
+    418 => 'I\'m a teapot',
+    422 => 'Unprocessable Entity',
+    423 => 'Locked',
+    424 => 'Failed Dependency',
+    425 => 'Unordered Collection',
+    426 => 'Upgrade Required',
+    449 => 'Retry With',
+    450 => 'Blocked by Windows Parental Controls',
+    500 => 'Internal Server Error',
+    501 => 'Not Implemented',
+    502 => 'Bad Gateway',
+    503 => 'Service Unavailable',
+    504 => 'Gateway Timeout',
+    505 => 'HTTP Version Not Supported',
+    506 => 'Variant Also Negotiates',
+    507 => 'Insufficient Storage',
+    509 => 'Bandwidth Limit Exceeded',
+    510 => 'Not Extended'
+  ];
+  return $code . ' ' . $http_codes[$code];
+}
+
+function probo_machine_name(string $value) : string {
+  if (!empty($value)) {
+    return preg_replace('/[^\w\d]+/', '', $value);
+  }
+  else {
+    return NULL;
+  }
+}

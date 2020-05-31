@@ -1,0 +1,46 @@
+{#
+  Enable Repositories Template.
+
+  TODO:
+  1. Make enabled repositories appear as sub-nav under the team name
+     when selected so they cannot be accidentally disabled.
+  2. When enabled repositories are selected from the team name subnav
+     they appear in the window for that team as enabled with the option
+     to disable.
+  3. Repo information appears in a modal so we do not have to leave the
+     page to go to the repo information.
+#}
+<div class="probo-repositories-tabs">
+{% if teams %}
+  {% for team in teams %}
+    {% if loop.index0 == 0 %}
+<button class="probo-team-links active" id="defaultButton" onload="openTeam(event, '{{ team.machineName }}')" onclick="openTeam(event, '{{ team.machineName }}')">{{ team.name }}</button>
+    {% else %}
+<button class="probo-team-links" onclick="openTeam(event, '{{ team.machineName }}')">{{ team.name }}</button>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+</div>
+
+{% if teams %}
+  {% for team in teams %}
+    {% if loop.index0 == 0 %}
+<div id="{{ team.machineName }}" class="tabcontent" style="display: block;">
+    {% else %}
+<div id="{{ team.machineName }}" class="tabcontent" style="display: none;">
+    {% endif %}
+    {% for repository in team.repositories %}
+  <div class="probo-repository-block">
+
+    <a href="{{ repository.url }}"><img src="{{ repository.avatar }}" width="32" style="float: right" /></a>
+    <b class="probo-team-title">{{ repository.name|length > 17 ? repository.name|slice(0, 50) ~ '...' : repository.name }}</b><br />
+    Team: {{ team.name }}<br /><br />
+    <button class="probo-enable-repository" value="disabled" onclick="selectRepo(event, '{{ repository.name }}')">Enable</button>
+    <button class="probo-visit-repository" value="disabled" onclick="viewRepo(event, '{{ repository.url }}')">Repo</button>
+    <!-- <a href="{{ repository.url }}">Click to visit repository.</a> -->
+    </label>
+  </div>
+    {% endfor %}
+</div>
+  {% endfor %}
+{% endif %}

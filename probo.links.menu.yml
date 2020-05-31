@@ -1,0 +1,35 @@
+probo.general:
+  title: 'Probo'
+  description: 'General settings for Probo server.'
+  route_name: probo.admin_settings
+  menu_name: probo.general
+  parent: system.admin_config
+  weight: 0
+probo.general_settings:
+  title: 'General Settings'
+  description: 'General settings for Probo server.'
+  route_name: probo.admin_settings_general
+  menu_name: probo.general_settings
+  parent: probo.general
+  weight: 0
+probo.asset_receiver_settings:
+  title: 'Asset Receiver Settings'
+  description: 'General settings for the Probo system.'
+  route_name: probo.admin_settings_asset_receiver
+  menu_name: probo.asset_receiver_settings
+  parent: probo.general
+  weight: 5
+probo.jira_settings:
+  title: 'JIRA Settings'
+  description: 'API Settings for JIRA integration.'
+  route_name: probo.admin_settings_jira
+  menu_name: probo.jira_settings
+  parent: probo.general
+  weight: 10
+#probo.probo_repositories:
+#  title: 'Repositories'
+#  route_name: probo.admin_config_system_probo_repositories
+#  description: 'The repositories configured for the Probo asset manager.'
+#  menu_name: probo.probo_repositories
+#  parent: probo.probo
+#  weight: 3

@@ -1,0 +1,24 @@
+<div id="probo-build-error" style="width: 750px; text-align: center; margin: 0px auto;">
+
+  {% if error_code == '423P' %}
+    <img src="{{ images }}/hourglass.svg" width="250" border="0" /><br />
+    <h2>Slow your roll dude....<br />this build is still being constructed.</h2>
+    <h3>Try again shortly. You can use the link below to re-try.</h3>
+    <a href="{{ protocol }}://{{ build_id }}.{{ build_domain }}">{{ protocol }}://{{ build_id }}.{{ build_domain }}</a><br />
+  {% elseif error_code == '404N' %}
+    <img src="{{ images }}/tools.svg" width="250" border="0" /><br />
+    <h2>The build you are looking for<br />
+    doesn't exist. Never heard of it.</h2>
+  {% elseif error_code == '410R' %}
+    <img src="{{ images }}/reaper.svg" width="250" border="0" /><br />
+    <h2>Dearly Beloved. We're gathered here today<br />
+    to let you know this build has been reaped.</h2>
+    <h3>May it rest in eternal peace.</h3>
+  {% else %}
+    <b>Uncaught Condition. Email this info to mrbagnall@icloud.com</b><br />
+    Build ID: {{ build_id }}<br />
+    Error Code: {{ error_code }}<br />
+    Reason: {{ reason }}
+  {% endif %}
+
+</div>

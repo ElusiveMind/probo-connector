@@ -1,0 +1,357 @@
+<?php
+
+use Drupal\Core\Database\Database;
+
+/**
+ * Implements hook_install().
+ */
+function probo_install() {
+  // We need to be able to upload insecure files and make this easy. So we just make
+  // it so right here.
+  $config = \Drupal::service('config.factory')->getEditable('system.file');
+  $config->set('allow_insecure_uploads', TRUE)->save();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function probo_uninstall() {
+  // We need to be able to upload insecure files and make this easy. So we just make
+  // it so right here.
+  $config = \Drupal::service('config.factory')->getEditable('system.file');
+  $config->set('allow_insecure_uploads', FALSE)->save();
+}
+
+/**
+ * Implements hook_schema().
+ */
+function probo_schema() {
+  $schema = [];
+  $schema['probo_bitbucket'] = [
+    'description' => 'Associations between Bitbucket tokens and Drupal users.',
+    'fields' => [
+      'uid' => [
+        'description' => 'The Drupal user id for this reference.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'access_token' => [
+        'description' => 'The access token for the account.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'refresh_token' => [
+        'description' => 'The Bitbucket refresh token for renewing the access token.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'username' => [
+        'description' => 'The Bitbucket username for this account.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'display_name' => [
+        'description' => 'The user\'s Bitbucket display name.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'account_id' => [
+        'description' => 'The bitbucket user id.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'uuid' => [
+        'description' => 'The unique identifier for this account.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+    ],
+    'primary key' => ['uid'],
+  ];
+  $schema['probo_repositories'] = [
+    'description' => 'Configured repositories enabled from Bitbucket, GitHub or GitLab.',
+    'fields' => [
+      'rid' => [
+        'description' => 'The repository id',
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ],
+      'uid' => [
+        'description' => 'The Drupal user id associated with this repository.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'service' => [
+        'description' => 'The service to which this repository belongs.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'uuid' => [
+        'description' => 'The unique identifier by the service for this repository.',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'owner' => [
+        'description' => 'The owner of the repository',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'team' => [
+        'description' => 'The team under which this repository resi',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'repository' => [
+        'description' => 'The slug name of the repository',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'full_name' => [
+        'description' => 'The full name owner of the repo. Consists of the repo username and repo name.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'description' => [
+        'description' => 'The description of what is in this repository',
+        'type' => 'text',
+        'size' => 'medium',
+      ],
+      'bucket_token' => [
+        'description' => 'The asset receiver upload token. Different for different users.',
+        'type' => 'varchar',
+        'length' => 32,
+        'default' => '',
+      ],
+      'active' => [
+        'description' => 'The flag as to whether or not this bucket is active.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => '1',
+      ],
+    ],
+    'primary key' => ['rid'],
+  ];
+
+  $schema['probo_builds'] = [
+    'description' => 'Contains the build id and time the build was created.',
+    'fields' => [
+      'id' => [
+        'description' => 'Serial id for this entry',
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ],
+      'bid' => [
+        'description' => 'The uuid of the build assigned by Probo',
+        'type' => 'varchar',
+        'length' => 36,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'rid' => [
+        'description' => 'The id of the repository assigned by the probo module',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'service' => [
+        'description' => 'The service for the repository.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'repository' => [
+        'description' => 'The repository name.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '0',
+      ],
+      'owner' => [
+        'description' => 'The owning organization of the repo.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '0',
+      ],
+      'pull_request_name' => [
+        'description' => 'The name of the pull request.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '0',
+      ],
+      'author_name' => [
+        'description' => 'The author of the pull request.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '0',
+      ],
+      'pull_request_url' => [
+        'description' => 'The url of the pull request.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '0',
+      ],
+      'build_size' => [
+        'description' => 'The size (in bytes) of the build.',
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => '0',
+      ],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => ['bid' => ['bid']],
+  ];
+
+  $schema['probo_jira_comments'] = [
+    'description' => 'Our table to track what is posted to JIRA comments.',
+    'fields' => [
+      'jid' => [
+        'description' => 'The serialized ID of the event',
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ],
+      'issue_label' => [
+        'description' => 'The human readable issue id.',
+        'type' => 'varchar',
+        'length' => 36,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'bid' => [
+        'description' => 'The build id associated with this post.',
+        'type' => 'varchar',
+        'length' => 36,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'issue_id' => [
+        'description' => 'The issue id provided by the API.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'comment_id' => [
+        'description' => 'The comment id provided by the API.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['jid'],
+  ];
+
+  $schema['probo_tasks'] = [
+    'description' => 'Contains individual task details for each build.',
+    'fields' => [
+      'bid' => [
+        'description' => 'The uuid of the build assigned by Probo',
+        'type' => 'varchar',
+        'length' => 36,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'rid' => [
+        'description' => 'The id of the repository assigned by the probo module',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'tid' => [
+        'description' => 'The individual task id for the current build',
+        'type' => 'varchar',
+        'length' => 16,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'timestamp' => [
+        'description' => 'The microtime this file was created.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '0',
+      ],
+      'state' => [
+        'description' => 'The state of the current task.',
+        'type' => 'varchar',
+        'length' => 16,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'event_name' => [
+        'description' => 'The name of the event as specified by Probo.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'event_description' => [
+        'description' => 'The description of the event as specified by Probo.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'plugin' => [
+        'description' => 'The plugin used for this event.',
+        'type' => 'varchar',
+        'length' => 96,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'context' => [
+        'description' => 'The context of the task.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'payload' => [
+        'description' => 'The output of the event.',
+        'type' => 'text',
+        'size' => 'medium',
+        'not null' => TRUE,
+      ],
+    ],
+    'primary key' => ['bid', 'tid'],
+  ];
+  return $schema;
+}
