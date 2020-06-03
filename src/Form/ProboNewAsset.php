@@ -11,10 +11,51 @@ use Drupal\Core\Form\FormStateInterface;
 use GuzzleHttp\Exception\ConnectException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Database\Connection;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
 /**
  * Class ProboNewAsset.
  */
 class ProboNewAsset extends FormBase {
+
+  /**
+   * The database service.
+   *
+   * @var \Drupal\Core\Database\Database
+   */
+  protected $db;
+
+  /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * ProboRepositoryController constructor.
+   *
+   * @param \Drupal\Core\Database\Database
+   *  The database service
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *  The messenger service.
+   */
+  public function __construct(Connection $db, MessengerInterface $messenger) {
+    $this->messenger = $messenger;
+    $this->db = $db;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('database'),
+      $container->get('messenger')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -84,7 +125,7 @@ class ProboNewAsset extends FormBase {
     $file_path = $stream_wrapper_manager->realpath();
 
     // Get a list of all the owners/organizations and repositories along with the token.
-    $query = \Drupal::database()->select('probo_repositories', 'pr')
+    $query = $this->db->select('probo_repositories', 'pr')
       ->fields('pr', ['rid', 'owner', 'repository', 'token'])
       ->condition('pr.rid', $values['owner_repository'])
       ->orderBy('owner', 'ASC')
@@ -122,11 +163,11 @@ class ProboNewAsset extends FormBase {
     catch (ConnectException $e) {
       $msg = $e->getMessage();
       if (strpos($msg, 'Failed to connect')) {
-        drupal_set_message('Unable to connect to ' . $asset_receiver_url. ' - please check server or setting', 'error');
+        $this->messenger->addMessage('Unable to connect to ' . $asset_receiver_url. ' - please check server or setting', 'error');
         $form_state->setRedirect('probo.repository_builds', ['rid' => $rid]);
       }
       else {
-        drupal_set_message($msg, 'error');
+        $this->messenger->addMessage($msg, 'error');
         $form_state->setRedirect('probo.repository_builds', ['rid' => $rid]);
       }
     }
@@ -135,7 +176,7 @@ class ProboNewAsset extends FormBase {
       ->values([$rid, $filename, $fileid])
       ->execute();
 
-    drupal_set_message('The asset ' . $filename . ' has been sucessfully uploaded.');
+      $this->messenger->addMessage('The asset ' . $filename . ' has been sucessfully uploaded.');
 
     // Invalidate the render cache adding the asset so it shows up.
     \Drupal::service('cache.render')->invalidateAll();

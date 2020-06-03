@@ -9,11 +9,52 @@ use Drupal\Core\Form\FormStateInterface;
 use GuzzleHttp\Exception\ConnectException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Database\Connection;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class PropoRepositoryForm.
  */
 class PropoRepositoryForm extends FormBase {
+
+  /**
+   * The database service.
+   *
+   * @var \Drupal\Core\Database\Database
+   */
+  protected $db;
+
+  /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * ProboRepositoryForm constructor.
+   *
+   * @param \Drupal\Core\Database\Database
+   *  The database service
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *  The messenger service.
+   */
+  public function __construct(Connection $db, MessengerInterface $messenger) {
+    $this->messenger = $messenger;
+    $this->db = $db;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('database'),
+      $container->get('messenger')
+    );
+  }
+
 
   /**
    * {@inheritdoc}
@@ -35,7 +76,7 @@ class PropoRepositoryForm extends FormBase {
         '#value' => $rid,
       ];
       // Get the repository information.
-      $query = \Drupal::database()->select('probo_repositories', 'pr')
+      $query = $this->db->select('probo_repositories', 'pr')
         ->fields('pr', ['rid', 'repository', 'owner', 'token', 'roles', 'active'])
         ->condition('rid', $rid);
       $repo = $query->execute()->fetchAllAssoc('rid');
@@ -158,11 +199,11 @@ class PropoRepositoryForm extends FormBase {
     catch (ConnectException $e) {
       $msg = $e->getMessage();
       if (strpos($msg, 'Failed to connect')) {
-        drupal_set_message('Unable to connect to ' . $asset_receiver_url . ' - please check server or setting', 'error');
+        $this->messenger->addMessage('Unable to connect to ' . $asset_receiver_url . ' - please check server or setting', 'error');
         return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());
       }
       else {
-        drupal_set_message($msg, 'error');
+        $this->messenger->addMessage($msg, 'error');
         return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());
       }
     }
@@ -192,11 +233,11 @@ class PropoRepositoryForm extends FormBase {
       }
       catch (ConnectException $e) {
         if (strpos($msg, 'Failed to connect')) {
-          drupal_set_message('Unable to connect to ' . $asset_receiver_url . ' - please check server or setting', 'error');
+          $this->messenger->addMessage('Unable to connect to ' . $asset_receiver_url . ' - please check server or setting', 'error');
           return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());
         }
         else {
-          drupal_set_message($msg, 'error');
+          $this->messenger->addMessage($msg, 'error');
           return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());
         }
       }
@@ -206,7 +247,7 @@ class PropoRepositoryForm extends FormBase {
           ->condition('rid', $values['rid'])
           ->fields(['roles' => serialize($user_roles), 'active' => $values['active']])
           ->execute();
-          drupal_set_message('Bucket ' . $values['repository_owner'] . '-' . $values['repository_name'] . ' has been updated');
+          $this->messenger->addMessage('Bucket ' . $values['repository_owner'] . '-' . $values['repository_name'] . ' has been updated');
       } elseif (!empty($buffer) && $buffer == 'Token created') {
         // If we are here then our bucket and upload token are created, so we can add everything
         // to our database table.
@@ -215,14 +256,14 @@ class PropoRepositoryForm extends FormBase {
         $query->values([$values['repository_owner'], $values['repository_name'], $token, serialize($user_roles), TRUE]);
         $query->execute();
 
-        drupal_set_message('Bucket ' . $values['repository_owner'] . '-' . $values['repository_name'] . ' has been created with the token of ' . $token);
+        $this->messenger->addMessage('Bucket ' . $values['repository_owner'] . '-' . $values['repository_name'] . ' has been created with the token of ' . $token);
       }
     }
     else {
       if (!empty($buffer)) {
         // If the buffer was empty, then we already have a bucket with that name and can
         // skip gracefully. Otherwise, we can't do anything and need to error.
-        drupal_set_message('Creation issue: ' . $buffer, 'error');
+        $this->messenger->addMessage('Creation issue: ' . $buffer, 'error');
       }
     }
     return new RedirectResponse(Url::fromRoute('probo.admin_config_system_probo_repositories')->toString());

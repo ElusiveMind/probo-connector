@@ -13,6 +13,10 @@ use Drupal\probo\Controller\ProboAssetReceiverAPI;
 use Drupal\user\UserInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 
+use Drupal\probo\Entity\TweetEntity;
+use Drupal\probo\Entity\TweetProfileEntity;
+
+
 define('BITBUCKET_CLIENT_ID', 'vtfQkaWRucAuRqMCEm');
 define('BITBUCKET_CLIENT_SECRET', 'zs5huNw3Z2sK22Y6dVfVX5hma2Bvfgh5');
 

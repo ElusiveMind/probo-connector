@@ -4,20 +4,60 @@ namespace Drupal\probo\Controller;
 
 use Drupal\Core\Url;
 use Drupal\Core\Link;
-//use Drupal\Core\Form\ConfigFormBase;
-use Drupal\Core\Controller\ControllerBase;
+
 //use GuzzleHttp\Exception\ConnectException;
 //use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 //use Drupal\Core\Routing\TrustedRedirectResponse;
 //use Drupal\Component\Render\FormattableMarkup;
-use Drupal\probo\Controller\ProboAssetReceiverAPI;
 
+use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Database\Connection;
+use Drupal\probo\Controller\ProboAssetReceiverAPI;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class ProboAssetReceiver.
  */
 class ProboAssetReceiver extends ControllerBase {
+
+ /**
+   * The database service.
+   *
+   * @var \Drupal\Core\Database\Database
+   */
+  protected $db;
+
+  /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * ProboAssetReceiver constructor.
+   *
+   * @param \Drupal\Core\Database\Database
+   *  The database service
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *  The messenger service.
+   */
+  public function __construct(Connection $db, MessengerInterface $messenger) {
+    $this->messenger = $messenger;
+    $this->db = $db;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('database'),
+      $container->get('messenger')
+    );
+  }
 
  /**
    * list_assets().
@@ -125,7 +165,7 @@ class ProboAssetReceiver extends ControllerBase {
     $params = (!empty($asset_receiver_token)) ? ['headers' => ['Authorization' => 'Bearer ' . $asset_receiver_token]] : [];
 
     // Get the filename, owner/organization and repository for deleting the asset.
-    $query = \Drupal::database()->select('probo_assets', 'pa');
+    $query = $this->db->select('probo_assets', 'pa');
     $query->addField('pa', 'filename');
     $query->addField('pr', 'owner');
     $query->addField('pr', 'repository');
@@ -143,17 +183,17 @@ class ProboAssetReceiver extends ControllerBase {
     catch (ConnectException $e) {
       $msg = $e->getMessage();
       if (strpos($msg, 'Failed to connect')) {
-        drupal_set_message('Unable to connect to ' . $config->get('asset_receiver_url_port'). ' - please check server or setting', 'error');
+        $this->messenger->addMessage('Unable to connect to ' . $config->get('asset_receiver_url_port'). ' - please check server or setting', 'error');
         return new RedirectResponse(Url::fromRoute('probo.repository_builds')->toString());
       }
     }
 
     // Remove the reference from the table.
-    $query = \Drupal::database()->delete('probo_assets')
+    $query = $this->db->delete('probo_assets')
       ->condition('aid', $aid)
       ->execute();
 
-    drupal_set_message('The ' . $asset->filename . ' in the ' . $assets->owner . '-' . $assets->repository . ' bucket has been successfully deleted.');
+    $this->messenger->addMessage('The ' . $asset->filename . ' in the ' . $assets->owner . '-' . $assets->repository . ' bucket has been successfully deleted.');
 
     // Invalidate the render cache after removing the asset so it does not show anymore.
     \Drupal::service('cache.render')->invalidateAll();
@@ -174,7 +214,7 @@ class ProboAssetReceiver extends ControllerBase {
     $config = $this->config('probo.asset_receiver');
 
     // Get the filename, owner/organization and repository for deleting the asset.
-    $query = \Drupal::database()->select('probo_assets', 'pa');
+    $query = $this->db->select('probo_assets', 'pa');
     $query->addField('pa', 'filename');
     $query->addField('pr', 'owner');
     $query->addField('pr', 'repository');

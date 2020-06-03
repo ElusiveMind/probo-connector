@@ -260,8 +260,10 @@ class ProboBitbucketController extends ControllerBase {
       $bitbucket->currentUser()->listTeams(['role' => 'admin']);
     }
     catch (ClientErrorException $e) {
+    
+
       $message = $e->getMessage();
-      $status = $e->getStatus();
+      $status = $e->getCode();
 
       if ($status == 401) {
         $auth = $provider->getAccessToken('refresh_token', ['refresh_token' => $bitbucket_service->refresh_token]);

@@ -10,12 +10,53 @@ use GuzzleHttp\Exception\ConnectException;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
-use Drupal\Component\Render\FormattableMarkup; 
+use Drupal\Component\Render\FormattableMarkup;
+
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Database\Connection;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class ProboAssetController.
  */
 class ProboAssetController extends ControllerBase {
+
+  /**
+   * The database service.
+   *
+   * @var \Drupal\Core\Database\Database
+   */
+  protected $db;
+
+  /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * ProboAssetController constructor.
+   *
+   * @param \Drupal\Core\Database\Database
+   *  The database service
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *  The messenger service.
+   */
+  public function __construct(Connection $db, MessengerInterface $messenger) {
+    $this->messenger = $messenger;
+    $this->db = $db;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('database'),
+      $container->get('messenger')
+    );
+  }
 
   /**
    * List_assets.
@@ -24,7 +65,7 @@ class ProboAssetController extends ControllerBase {
    *   Return a render array that is a table of assets.
    */
   public function list_assets() {
-    $query = \Drupal::database()->select('probo_assets', 'pa');
+    $query = $this->db->select('probo_assets', 'pa');
     $query->fields('pa', ['aid', 'rid', 'filename']);
     $query->addField('pr', 'owner');
     $query->addField('pr', 'repository');
@@ -117,7 +158,7 @@ class ProboAssetController extends ControllerBase {
     catch (ConnectException $e) {
       $msg = $e->getMessage();
       if (strpos($msg, 'Failed to connect')) {
-        drupal_set_message('Unable to connect to ' . $config->get('asset_receiver_url_port'). ' - please check server or setting', 'error');
+        $this->messenger->addMessage('Unable to connect to ' . $config->get('asset_receiver_url_port'). ' - please check server or setting', 'error');
         return new RedirectResponse(Url::fromRoute('probo.repository_builds')->toString());
       }
     }
@@ -127,7 +168,7 @@ class ProboAssetController extends ControllerBase {
       ->condition('aid', $aid)
       ->execute();
 
-    drupal_set_message('The ' . $asset->filename . ' in the ' . $assets->owner . '-' . $assets->repository . ' bucket has been successfully deleted.');
+    $this->messenger->addMessage('The ' . $asset->filename . ' in the ' . $assets->owner . '-' . $assets->repository . ' bucket has been successfully deleted.');
 
     // Invalidate the render cache after removing the asset so it does not show anymore.
     \Drupal::service('cache.render')->invalidateAll();
