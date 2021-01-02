@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\probo\Plugin\Block;
+namespace Drupal\probo_connector\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
 

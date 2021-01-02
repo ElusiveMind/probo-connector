@@ -5,7 +5,7 @@ use Drupal\Core\Database\Database;
 /**
  * Implements hook_install().
  */
-function probo_install() {
+function probo_connector_install() {
   // We need to be able to upload insecure files and make this easy. So we just make
   // it so right here.
   $config = \Drupal::service('config.factory')->getEditable('system.file');
@@ -15,7 +15,7 @@ function probo_install() {
 /**
  * Implements hook_uninstall().
  */
-function probo_uninstall() {
+function probo_connector_uninstall() {
   // We need to be able to upload insecure files and make this easy. So we just make
   // it so right here.
   $config = \Drupal::service('config.factory')->getEditable('system.file');
@@ -25,7 +25,7 @@ function probo_uninstall() {
 /**
  * Implements hook_schema().
  */
-function probo_schema() {
+function probo_connector_schema() {
   $schema = [];
   $schema['probo_bitbucket'] = [
     'description' => 'Associations between Bitbucket tokens and Drupal users.',

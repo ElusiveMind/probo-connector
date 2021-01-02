@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\probo\Controller;
+namespace Drupal\probo_connector\Controller;
 
 use Drupal\Core\Url;
 use Drupal\Core\Form\ConfigFormBase;

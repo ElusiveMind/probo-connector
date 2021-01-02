@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\probo\Form;
+namespace Drupal\probo_connector\Form;
 
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;

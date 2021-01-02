@@ -1,0 +1,13 @@
+name: Probo Connector
+type: module
+description: Probo services for the Drupal End
+package: ProboCI
+
+core_version_requirement: ^8.8.0 || ^9.0
+
+libraries:
+  - proboci/global-styling
+
+version: '1.0.0'
+#project: 'nodeaccess'
+#project status url: 'https://www.drupalgardens.io/release-history'

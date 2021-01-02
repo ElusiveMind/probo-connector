@@ -25,7 +25,7 @@ define('BITBUCKET_CLIENT_SECRET', 'zs5huNw3Z2sK22Y6dVfVX5hma2Bvfgh5');
  * Function to make sure all of the requirements in configurations are met before
  * doing any Probo server related functions. Basically a configuration test.
  */
-function probo_gatekeeper() {
+function probo_connector_gatekeeper() {
   $pass = TRUE;
 
   // Check to be sure we can access the asset receiver and that we have a token.
@@ -55,7 +55,7 @@ function probo_gatekeeper() {
 /**
  * Implements hook_ENTITY_TYPE_view() for user entities.
  */
-function probo_user_view(array &$build, UserInterface $account, EntityViewDisplayInterface $display) {  
+function probo_connector_user_view(array &$build, UserInterface $account, EntityViewDisplayInterface $display) {  
   $build['bitbucket_option'] = [
     '#type' => 'item',
     '#markup' => 'Bitbucket Options',
@@ -76,7 +76,7 @@ function probo_user_view(array &$build, UserInterface $account, EntityViewDispla
 /**
  * Implements hook_theme().
  */
-function probo_theme($existing, $type, $theme, $path) {
+function probo_connector_theme($existing, $type, $theme, $path) {
   return [
     'probo_active_build_block' => [
       'variables' => [
@@ -122,10 +122,10 @@ function probo_theme($existing, $type, $theme, $path) {
 /**
  * Implements hook_help().
  */
-function probo_help($route_name, RouteMatchInterface $route_match) {
+function probo_connector_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     // Main module help for the probo module.
-    case 'help.page.probo':
+    case 'help.page.probo_connector':
       // Commenting out for example purposes and in the event it is needed later
       //$url = Url::fromRoute('probo.pbbcg_instructions');
       //$link = Link::fromTextAndUrl(t('click here'), $url);
@@ -146,7 +146,7 @@ function probo_help($route_name, RouteMatchInterface $route_match) {
 /**
  * Implements hook_cron().
  */
-function probo_cron() {
+function probo_connector_cron() {
   // Load our configuration variables for this module. If no domain is configured,
   // then we cannot run cron.
   $config = \Drupal::configFactory()->getEditable('probo.probosettings');
@@ -213,7 +213,7 @@ function probo_cron() {
 /**
  * Implements hook_page_bottom().
  */
-function probo_page_bottom(&$page_bottom) {
+function probo_connector_page_bottom(&$page_bottom) {
   // We only want this added on our builds page
   if (\Drupal::routeMatch()->getRouteName() == 'probo.repository_builds') {
     $module_handler = \Drupal::service('theme_handler');
@@ -243,7 +243,7 @@ function probo_page_bottom(&$page_bottom) {
 /**
  * Implements hook_page_top().
  */
-function probo_page_top(&$page_top) {
+function probo_connector_page_top(&$page_top) {
   $page_top['proboci_scripts_1'] = [
     '#type'  => 'html_tag',
     '#tag'   => 'link',
@@ -310,7 +310,7 @@ function remove_from_jira($build_id) {
  * @return string $code_string
  *   A constructed string of the error code and the error code description.
  */
-function probo_get_http_error(string $code) : string {
+function probo_connector_get_http_error(string $code) : string {
   $http_codes = [
     100 => 'Continue',
     101 => 'Switching Protocols',
@@ -372,7 +372,7 @@ function probo_get_http_error(string $code) : string {
   return $code . ' ' . $http_codes[$code];
 }
 
-function probo_machine_name(string $value) : string {
+function probo_connector_machine_name(string $value) : string {
   if (!empty($value)) {
     return preg_replace('/[^\w\d]+/', '', $value);
   }

@@ -1,6 +1,6 @@
 services:
   probo.user_session_object_subscriber:
-    class: Drupal\probo\EventSubscriber\UserSessionObjectSubscriber
+    class: Drupal\probo_connector\EventSubscriber\UserSessionObjectSubscriber
     arguments:
       - '@current_user'
     tags:

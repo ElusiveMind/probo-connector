@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\probo\Objects;
+namespace Drupal\probo_connector\Objects;
 
 class ProboRepository {
 

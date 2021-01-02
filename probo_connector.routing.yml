@@ -1,14 +1,14 @@
 probo.home:
   path: 'probo'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboRepositoryController::display_repositories'
+    _controller: '\Drupal\probo_connector\Controller\ProboRepositoryController::display_repositories'
   requirements:
     _permission: 'access content'
 
 probo.list_assets:
   path: 'probo/list-assets/{bucket}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboAssetReceiver::list_assets'
+    _controller: '\Drupal\probo_connector\Controller\ProboAssetReceiver::list_assets'
     _title: 'Assets'
   requirements:
     _permission: 'access content'
@@ -17,21 +17,21 @@ probo.list_assets:
 probo.bitbucket_authorization_code:
   path: 'probo/authorize-bitbucket'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboBitbucketController::get_authorization_code'
+    _controller: '\Drupal\probo_connector\Controller\ProboBitbucketController::get_authorization_code'
     _title: 'Get Bitbucket Authorization Code'
   requirements:
     _permission: 'access content'
 probo.bitbucket_process_code:
   path: 'probo/authorize-bitbucket/process'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboBitbucketController::check_association'
+    _controller: '\Drupal\probo_connector\Controller\ProboBitbucketController::check_association'
     _title: 'Associate User to Bitbucket'
   requirements:
     _permission: 'access content' 
 probo.bitbucket_list_repositories:
   path: 'probo/authorize-bitbucket/repositories'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboBitbucketController::select_repositories'
+    _controller: '\Drupal\probo_connector\Controller\ProboBitbucketController::select_repositories'
     _title: 'Enable Repositories'
   requirements:
     _permission: 'access content'
@@ -40,7 +40,7 @@ probo.bitbucket_list_repositories:
 probo.probo_controller_service_endpoint:
   path: 'probo-api/service-endpoint'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboController::service_endpoint'
+    _controller: '\Drupal\probo_connector\Controller\ProboController::service_endpoint'
     _title: 'Probo Status Service Endpoint'
   methods: [POST]
   requirements:
@@ -48,7 +48,7 @@ probo.probo_controller_service_endpoint:
 probo.probo_controller_repository_status:
   path: 'probo-api/repository-status/{repository_id}/{token}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboController::repository_status'
+    _controller: '\Drupal\probo_connector\Controller\ProboController::repository_status'
     _title: 'Probo Repository Status Endpoint'
   methods: [GET]
   requirements:
@@ -56,7 +56,7 @@ probo.probo_controller_repository_status:
 probo.probo_controller_specific_build_status:
   path: 'probo-api/specific-build-status/{build_id}/{token}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboController::specific_build_status'
+    _controller: '\Drupal\probo_connector\Controller\ProboController::specific_build_status'
     _title: 'Probo Specific Build Status Endpoint'
   methods: [GET]
   requirements:
@@ -65,49 +65,49 @@ probo.probo_controller_specific_build_status:
 probo.repository_builds:
   path: 'probo/{rid}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboRepositoryController::repository_builds'
+    _controller: '\Drupal\probo_connector\Controller\ProboRepositoryController::repository_builds'
     _title: 'Repository Builds'
   requirements:
     _permission: 'access probo repositories'
 probo.build_details:
   path: 'probo/build/{bid}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboController::build_details'
+    _controller: '\Drupal\probo_connector\Controller\ProboController::build_details'
     _title: 'Build Details'
   requirements:
     _permission: 'access probo repositories'
 probo.mailcatcher:
   path: 'probo/mailcatcher/{bid}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboController::mailcatcher'
+    _controller: '\Drupal\probo_connector\Controller\ProboController::mailcatcher'
     _title: 'MailCatcher Redirect'
   requirements:
     _permission: 'access probo repositories'
 probo.solr:
   path: 'probo/solr/{bid}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboController::solr'
+    _controller: '\Drupal\probo_connector\Controller\ProboController::solr'
     _title: 'SOLR Redirect'
   requirements:
     _permission: 'access probo repositories'
 probo.uli:
   path: 'probo/uli/{bid}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboController::uli'
+    _controller: '\Drupal\probo_connector\Controller\ProboController::uli'
     _title: 'Drupal Site Admin Redirect'
   requirements:
     _permission: 'access probo repositories'
 probo.uli:
   path: 'probo/remove/{bid}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboController::remove'
+    _controller: '\Drupal\probo_connector\Controller\ProboController::remove'
     _title: 'Remove Probo Build'
   requirements:
     _permission: 'access probo repositories'
 probo.container_size:
   path: 'probo/size/{bid}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboController::get_container_size'
+    _controller: '\Drupal\probo_connector\Controller\ProboController::get_container_size'
     _title: 'Container Size'
   requirements:
     _permission: 'access content'
@@ -115,21 +115,21 @@ probo.container_size:
 probo.probo_asset_delete:
   path: '/probo/assets/delete/{aid}/{rid}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboRepositoryController::delete_asset'
+    _controller: '\Drupal\probo_connector\Controller\ProboRepositoryController::delete_asset'
     _title: 'Delete Asset'
   requirements:
    _permission: 'access probo assets'
 probo.probo_asset_add:
   path: '/probo/assets/add/{rid}'
   defaults:
-    _form: '\Drupal\probo\Form\ProboNewAsset'
+    _form: '\Drupal\probo_connector\Form\ProboNewAsset'
     _title: 'Upload New Asset'
   requirements:
     _permission: 'access probo assets'
 probo.probo_asset_download:
   path: '/probo/assets/download/{aid}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboRepositoryController::download_asset'
+    _controller: '\Drupal\probo_connector\Controller\ProboRepositoryController::download_asset'
     _title: 'Download Asset'
   requirements:
     _permission: 'access probo assets'
@@ -137,28 +137,28 @@ probo.probo_asset_download:
 probo.pbbcg_get_client_information:
   path: 'probo/pbbcg'
   defaults:
-    _form: '\Drupal\probo\Form\PBBCGClientInformation'
+    _form: '\Drupal\probo_connector\Form\PBBCGClientInformation'
     _title: 'Probo Bitbucket Configuration Authorization Code'
   requirements:
     _permission: 'access content'
 probo.pbbcg_refresh_token_configuration:
   path: 'probo/pbbcg/configuration'
   defaults:
-    _controller: '\Drupal\probo\Controller\PBBCGRefreshTokenConfiguration::configuration_display'
+    _controller: '\Drupal\probo_connector\Controller\PBBCGRefreshTokenConfiguration::configuration_display'
     _title: 'Probo Bitbucket Configuration Information'
   requirements:
     _permission: 'access content'
 probo.pbbcg_instructions:
   path: 'probo/pbbcg/instructions'
   defaults:
-    _controller: '\Drupal\probo\Controller\PBBCGInstructions::instructions'
+    _controller: '\Drupal\probo_connector\Controller\PBBCGInstructions::instructions'
     _title: 'Probo Bitbucket Configuration Instructions'
   requirements:
     _permission: 'access content'
 probo.proxy_error:
   path: 'probo/build-error'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboController::build_error_screen'
+    _controller: '\Drupal\probo_connector\Controller\ProboController::build_error_screen'
     _title: 'Something Went Horribly Wrong'
   requirements:
     _permission: 'access content'
@@ -166,28 +166,28 @@ probo.proxy_error:
 probo.admin_settings:
   path: 'admin/config/probo'
   defaults:
-    _form: '\Drupal\probo\Form\ProboSettingsForm'
+    _form: '\Drupal\probo_connector\Form\ProboSettingsForm'
     _title: 'Probo General Settings'
   requirements:
     _permission: 'administer probo'
 probo.admin_settings_general:
   path: '/admin/system/probo/general'
   defaults:
-    _form: '\Drupal\probo\Form\ProboSettingsForm'
+    _form: '\Drupal\probo_connector\Form\ProboSettingsForm'
     _title: 'Probo General Settings'
   requirements:
     _permission: 'administer probo'
 probo.admin_settings_asset_receiver:
   path: '/admin/system/probo/asset-receiver'
   defaults:
-    _form: '\Drupal\probo\Form\ProboAssetReceiverForm'
+    _form: '\Drupal\probo_connector\Form\ProboAssetReceiverForm'
     _title: 'Probo Asset Receiver Settings'
   requirements:
     _permission: 'administer probo'
 probo.admin_settings_jira:
   path: '/admin/system/probo/jira-settings'
   defaults:
-    _form: '\Drupal\probo\Form\JiraSettingsForm'
+    _form: '\Drupal\probo_connector\Form\JiraSettingsForm'
     _title: 'JIRA Settings'
   requirements:
     _permission: 'administer probo'
@@ -196,28 +196,28 @@ probo.admin_settings_jira:
 probo.admin_config_system_probo_repositories:
   path: '/admin/system/probo/repositories'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboRepositoryController::admin_display_repositories'
+    _controller: '\Drupal\probo_connector\Controller\ProboRepositoryController::admin_display_repositories'
     _title: 'Repositories'
   requirements:
     _permission: 'administer probo'
 probo.admin_config_system_probo_repositories_add_new:
   path: '/admin/system/probo/repositories/add'
   defaults:
-    _form: '\Drupal\probo\Form\PropoRepositoryForm'
+    _form: '\Drupal\probo_connector\Form\PropoRepositoryForm'
     _title: 'Add New Repository'
   requirements:
     _permission: 'administer probo'
 probo.admin_config_system_probo_repositories_update:
   path: '/admin/system/probo/repositories/update/{rid}'
   defaults:
-    _form: '\Drupal\probo\Form\PropoRepositoryForm'
+    _form: '\Drupal\probo_connector\Form\PropoRepositoryForm'
     _title: 'Update Repository'
   requirements:
     _permission: 'administer probo'
 probo.admin_config_system_probo_repositories_delete:
   path: '/admin/system/probo/repositories/delete/{rid}'
   defaults:
-    _controller: '\Drupal\probo\Controller\ProboRepositoryController::admin_delete_repository'
+    _controller: '\Drupal\probo_connector\Controller\ProboRepositoryController::admin_delete_repository'
     _title: 'Delete Repository'
   requirements:
     _permission: 'administer probo'
