@@ -13,7 +13,6 @@ probo.list_assets:
   requirements:
     _permission: 'access content'
 
-
 probo.bitbucket_authorization_code:
   path: 'probo/authorize-bitbucket'
   defaults:
@@ -97,7 +96,7 @@ probo.uli:
     _title: 'Drupal Site Admin Redirect'
   requirements:
     _permission: 'access probo repositories'
-probo.uli:
+probo.uli-remove:
   path: 'probo/remove/{bid}'
   defaults:
     _controller: '\Drupal\probo_connector\Controller\ProboController::remove'
@@ -134,27 +133,27 @@ probo.probo_asset_download:
   requirements:
     _permission: 'access probo assets'
 
-probo.pbbcg_get_client_information:
-  path: 'probo/pbbcg'
-  defaults:
-    _form: '\Drupal\probo_connector\Form\PBBCGClientInformation'
-    _title: 'Probo Bitbucket Configuration Authorization Code'
-  requirements:
-    _permission: 'access content'
-probo.pbbcg_refresh_token_configuration:
-  path: 'probo/pbbcg/configuration'
-  defaults:
-    _controller: '\Drupal\probo_connector\Controller\PBBCGRefreshTokenConfiguration::configuration_display'
-    _title: 'Probo Bitbucket Configuration Information'
-  requirements:
-    _permission: 'access content'
-probo.pbbcg_instructions:
-  path: 'probo/pbbcg/instructions'
-  defaults:
-    _controller: '\Drupal\probo_connector\Controller\PBBCGInstructions::instructions'
-    _title: 'Probo Bitbucket Configuration Instructions'
-  requirements:
-    _permission: 'access content'
+# probo.pbbcg_get_client_information:
+#   path: 'probo/pbbcg'
+#   defaults:
+#     _form: '\Drupal\probo_connector\Form\PBBCGClientInformation'
+#     _title: 'Probo Bitbucket Configuration Authorization Code'
+#   requirements:
+#     _permission: 'access content'
+# probo.pbbcg_refresh_token_configuration:
+#   path: 'probo/pbbcg/configuration'
+#   defaults:
+#     _controller: '\Drupal\probo_connector\Controller\PBBCGRefreshTokenConfiguration::configuration_display'
+#     _title: 'Probo Bitbucket Configuration Information'
+#   requirements:
+#     _permission: 'access content'
+# probo.pbbcg_instructions:
+#   path: 'probo/pbbcg/instructions'
+#   defaults:
+#     _controller: '\Drupal\probo_connector\Controller\PBBCGInstructions::instructions'
+#     _title: 'Probo Bitbucket Configuration Instructions'
+#   requirements:
+#     _permission: 'access content'
 probo.proxy_error:
   path: 'probo/build-error'
   defaults:

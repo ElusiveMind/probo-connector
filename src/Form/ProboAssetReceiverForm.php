@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\prprobo_connectorobo\Form;
+namespace Drupal\probo_connector\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;

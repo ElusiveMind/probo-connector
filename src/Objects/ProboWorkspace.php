@@ -2,9 +2,9 @@
 
 namespace Drupal\probo_connector\Objects;
 
-use Drupal\probo\Objects\ProboRepository;
+use Drupal\probo_connector\Objects\ProboRepository;
 
-class ProboTeam {
+class ProboWorkspace {
 
   public $name = NULL;
   public $machineName = NULL;

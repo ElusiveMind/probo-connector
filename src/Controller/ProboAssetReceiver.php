@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Database\Connection;
-use Drupal\probo\Controller\ProboAssetReceiverAPI;
+use Drupal\probo_connector\Controller\ProboAssetReceiverAPI;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

@@ -7,15 +7,22 @@ use Drupal\Core\Link;
 use Drupal\Core\Controller\ControllerBase;
 use GuzzleHttp\Exception\ConnectException;
 //use Drupal\Core\StringTranslation\StringTranslationTrait;
-//use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Component\Render\FormattableMarkup;
 
 use Stevenmaguire\OAuth2\Client\Provider\Bitbucket;
 use Bitbucket\Client;
-use Bitbucket\Exception\ClientErrorException;
-use Drupal\probo\Objects\ProboTeam;
-use Drupal\probo\Objects\ProboRepository;
+use Bitbucket\ResultPager;
+use Bitbucket\Api\Users;
+use Bitbucket\Api\Repositories\Workspaces as RepositoriesWorkspaces;
+use Bitbucket\Api\Workspaces;
+use Bitbucket\Api\Workspaces\Members;
+use Bitbucket\Api\Workspaces\Projects;
+use Bitbucket\Exception\RuntimeException;
+use Bitbucket\Api\Users\Repositories;
+use Drupal\probo_connector\Objects\ProboWorkspace;
+use Drupal\probo_connector\Objects\ProboRepository;
 
 /**
  * Class ProboBitbucketController.
@@ -34,12 +41,7 @@ class ProboBitbucketController extends ControllerBase {
   private function get_association() {
     $store = \Drupal::service('tempstore.private')->get('probo');
     $services = $store->get('services');
-    if (!empty($services['bitbucket'])) {
-      return TRUE;
-    }
-    else {
-      return FALSE;
-    }
+    return (!empty($services['bitbucket']));
   }
 
   /**
@@ -92,8 +94,10 @@ class ProboBitbucketController extends ControllerBase {
     }
     else {
       // If, by some reason, we do not have a code from Bitbucket, go to the home page.
+      // The calling function wilol do this for us in a compliant way, so we return here
+      // and let that handle it.
       if (empty($_GET['code'])) {
-        new TrustedRedirectResponse(Url::fromRoute('probo.home')->toString);
+        return TRUE;
       }
       // Try to get an access token (using the authorization code grant)
       $auth = $provider->getAccessToken('authorization_code', ['code' => $_GET['code']]);
@@ -140,7 +144,7 @@ class ProboBitbucketController extends ControllerBase {
    */
   public function check_association() {
     $this->associate_user();
-    new TrustedRedirectResponse(Url::fromRoute('probo.home')->toString());
+    return new RedirectResponse(Url::fromRoute('probo.home')->toString());
   }
 
   /**
@@ -174,50 +178,60 @@ class ProboBitbucketController extends ControllerBase {
     // Get our service information
     $bitbucket_service = $this->get_bitbucket_service();
 
-    // Regardless of the teams this returns, there is also a team with the same name
-    // as the username for repositories that are part of no team.
-    $teams = $bitbucket->currentUser()->listTeams(['role' => 'admin']);
-    $teams['values'][] = [
-      'username' => $bitbucket_service->username,
-      'display_name' => $bitbucket_service->display_name,
-    ];
+    /**
+     * Having a re-factor a bunch of this as of Jan 3, 2021 due to changes in API going to 
+     * workspaces and using that space instead of the pre 2.0 version of the api. Doing my 
+     * best to keep this clear, but at the moment, I fear it may need to be re-factored again
+     * as I learn more about this.
+     */
 
-    foreach ($teams['values'] as $team) {
+    $paginator = new ResultPager($bitbucket);
+    $availableWorkspaces = $paginator->fetchAll($bitbucket->currentUser(), 'listWorkspaces', [['role' => 'collaborator']]);
+    $proboWorkspaces = [];
+    foreach ($availableWorkspaces as $key => $workspace) {
+      $proboWorkspace = new ProboWorkspace();
+      $proboWorkspace->setName($workspace['name']);
+      $proboWorkspace->setMachineName($workspace['slug']);
+
       $repos = [];
-      $proboTeam = new ProboTeam();
-      $proboTeam->setName($team['display_name']);
-      $proboTeam->setMachineName(probo_machine_name($team['display_name']));
       $page = 1;
-      $repositories = $bitbucket->repositories()->users($team['username'])->list(['role' => 'admin']);
-      if (empty($repositories['values'])) {
+      $repositoryWorkspaces = new RepositoriesWorkspaces($bitbucket, $workspace['slug']);
+      $workspaces = $repositoryWorkspaces->list();
+
+      if (empty($workspaces['values'])) {
         continue;
       }
+
+      $repos = [];
+
       do {
-        $page++;
-        foreach ($repositories['values'] as $key=> $repository) {
-          $repos[$team['username']][$repository['slug']] = $repository;
+        foreach ($workspaces['values'] as $key => $repository) {
+          $repos[$repository['full_name']] = $repository;
         }
-        $repositories = $bitbucket->repositories()->users($team['username'])->list(['role' => 'admin', 'page' => $page]);
-      } while (!empty($repositories['next']));
+        $repositoryWorkspaces = new RepositoriesWorkspaces($bitbucket, $workspace['slug']);
+        $workspaces = $repositoryWorkspaces->list(['page' => ++$page]);
+      } while (!empty($workspaces['next']));
+
+      foreach ($workspaces['values'] as $key => $repository) {
+        $repos[$repository['full_name']] = $repository;
+      }
 
       $repositories = [];
-      foreach ($repos as $team_name => $team_repos) {
-        foreach ($team_repos as $repo_name => $repo) {
-          $repository = new ProboRepository();
-          $uuid = rand(1, 10000);
-          $repository->setId($uuid);
-          $repository->setName($repo['slug']);
-          $project = (!empty($repo['project'])) ? $repo['project'] : "No Project";
-          $repository->setProjectName($project);
-          $repository->setUrl($repo['links']['html']['href']);
-          $repository->setAvatar($repo['links']['avatar']['href']);
-          $repositories[] = $repository;
-        }
+      foreach ($repos as $repo) {
+        $repository = new ProboRepository();
+        $uuid = rand(1, 10000);
+        $repository->setId($uuid);
+        $repository->setName($repo['slug']);
+        $project = (!empty($repo['project']['name'])) ? $repo['project']['name'] : "No Project";
+        $repository->setProjectName($project);
+        $repository->setUrl($repo['links']['html']['href']);
+        $repository->setAvatar($repo['links']['avatar']['href']);
+        $repositories[] = $repository;
       }
       foreach ($repositories as $repository) {
-        $proboTeam->addRepository($repository);
+        $proboWorkspace->addRepository($repository);
       }
-      $proboTeams[] = $proboTeam;
+      $proboWorkspaces[] = $proboWorkspace;
     }
 
     /*
@@ -230,7 +244,7 @@ class ProboBitbucketController extends ControllerBase {
 
     return [
       '#theme' => 'probo_select_repositories',
-      '#teams' => $proboTeams,
+      '#teams' => $proboWorkspaces,
       '#attached' => [
         'library' => [
           'probo/global-styling',
@@ -257,10 +271,9 @@ class ProboBitbucketController extends ControllerBase {
     $bitbucket = new Client();
     try {
       $bitbucket->authenticate(Client::AUTH_OAUTH_TOKEN, $bitbucket_service->access_token);
-      $bitbucket->currentUser()->listTeams(['role' => 'admin']);
-    }
-    catch (ClientErrorException $e) {
-    
+      $bitbucket->currentUser()->listTeamPermissions();
+
+    } catch (RuntimeException $e) {
 
       $message = $e->getMessage();
       $status = $e->getCode();
@@ -299,6 +312,7 @@ class ProboBitbucketController extends ControllerBase {
    */
   public function get_bitbucket_service() {
     $store = \Drupal::service('tempstore.private')->get('probo');
+
     if (!empty($store)) {
       $services = $store->get('services');
       if (!empty($services['bitbucket'])) {

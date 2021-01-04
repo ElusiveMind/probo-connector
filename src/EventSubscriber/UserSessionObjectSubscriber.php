@@ -15,8 +15,7 @@ class UserSessionObjectSubscriber implements EventSubscriberInterface {
 
   public function onRequest(GetResponseEvent $event) {
     $user_id = $this->accountProxy->id();
-
-    // If the user is not logged in then we cannot perform this function.
+    // Make sure we're logged in before doing anything
     if (!empty($user_id) && $user_id > 0) {
       $service_data = [
         'bitbucket' => FALSE,
@@ -26,7 +25,7 @@ class UserSessionObjectSubscriber implements EventSubscriberInterface {
 
       $store = \Drupal::service('tempstore.private')->get('probo');
       $services = $store->get('services');
-      if (empty($services)) {
+      //if (empty($services)) {
         /** Check for a Bitbucket account linkage */
         $query = \Drupal::database()->select('probo_bitbucket', 'pb');
         $query->fields('pb');
@@ -36,7 +35,11 @@ class UserSessionObjectSubscriber implements EventSubscriberInterface {
           $service_data['bitbucket'] = $bitbucket[$user_id];
         }
         $store->set('services', $service_data);
-      }
+      //}
+      //else {
+      //  dsm('services');
+      //  dsm($services);
+      //}
     }
   }
 

@@ -7,11 +7,11 @@ use Drupal\Core\Link;
 use Drupal\Core\Form\ConfigFormBase;
 use GuzzleHttp\Exception\ConnectException;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\probo\Controller\ProboAssetController;
+use Drupal\probo_connector\Controller\ProboAssetController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\probo\Controller\ProboBitbucketController;
+use Drupal\probo_connector\Controller\ProboBitbucketController;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Messenger\MessengerInterface;
