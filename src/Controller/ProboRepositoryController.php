@@ -153,7 +153,7 @@ class ProboRepositoryController extends ControllerBase {
       '#markup' => $html,
       '#attached' => [
         'library' => [
-          'probo/global-styling',
+          'probo_connector/global-styling',
         ],
       ],
     ];

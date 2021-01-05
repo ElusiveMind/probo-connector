@@ -247,7 +247,7 @@ class ProboBitbucketController extends ControllerBase {
       '#teams' => $proboWorkspaces,
       '#attached' => [
         'library' => [
-          'probo/global-styling',
+          'probo_connector/global-styling',
         ],
       ],
     ];
