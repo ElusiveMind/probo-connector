@@ -17,8 +17,8 @@ use Drupal\probo\Entity\TweetEntity;
 use Drupal\probo\Entity\TweetProfileEntity;
 
 
-define('BITBUCKET_CLIENT_ID', 'vtfQkaWRucAuRqMCEm');
-define('BITBUCKET_CLIENT_SECRET', 'zs5huNw3Z2sK22Y6dVfVX5hma2Bvfgh5');
+define('BITBUCKET_CLIENT_ID', 'xxx');
+define('BITBUCKET_CLIENT_SECRET', 'xxx');
 
 /**
  * probo_gatekeeper().
